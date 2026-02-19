@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Emotion Adaptive UI</title>
+    <style>
+        body {
+            transition: background 0.8s;
+            text-align: center;
+            font-family: Arial;
+        }
+
+        video {
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🎭 Emotion Adaptive Interface</h1>
+
+<video id="video" width="400" autoplay></video>
+<canvas id="canvas" style="display:none;"></canvas>
+
+<h2 id="emotionText">Detecting...</h2>
+
+<script>
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const text = document.getElementById("emotionText");
+
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => video.srcObject = stream);
+
+function sendFrame() {
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(blob => {
+
+        const formData = new FormData();
+        formData.append("image", blob);
+
+        fetch("http://127.0.0.1:5000/detect", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            text.innerText = data.emotion;
+
+            // 🎨 MOOD THERAPY UI COLORS
+            if (data.emotion === "Happy")
+                document.body.style.background = "#FFE066";
+
+            else if (data.emotion === "Sad")
+                document.body.style.background = "#6FA8DC";
+
+            else if (data.emotion === "Angry")
+                document.body.style.background = "#FF6B6B";
+
+            else if (data.emotion === "Fear")
+                document.body.style.background = "#B39DDB";
+
+            else if (data.emotion === "Surprise")
+                document.body.style.background = "#FFD1DC";
+
+            else if (data.emotion === "Disgust")
+                document.body.style.background = "#8BC34A";
+
+            else
+                document.body.style.background = "#E0E0E0";
+
+        });
+
+    }, "image/jpeg");
+
+}
+
+setInterval(sendFrame, 2000); // every 2 seconds
+
+</script>
+
+</body>
+</html>
