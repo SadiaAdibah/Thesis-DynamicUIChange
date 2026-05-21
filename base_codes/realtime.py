@@ -160,3 +160,7 @@ if __name__ == "__main__":
     window = EmotionApp()
     window.show()
     sys.exit(app.exec_())
+
+
+#command-------
+#QT_QPA_PLATFORM=xcb python realtime.py

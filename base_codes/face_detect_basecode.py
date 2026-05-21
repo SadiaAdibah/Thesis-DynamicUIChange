@@ -9,7 +9,7 @@ model = ViTForImageClassification.from_pretrained(
     'abhilash88/face-emotion-detection'
 )
 
-image = Image.open('sad.jpeg').convert("RGB")
+image = Image.open('resources/sad.jpeg').convert("RGB")
 
 inputs = processor(image, return_tensors="pt")
 

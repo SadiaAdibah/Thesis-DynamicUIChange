@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify
+import os
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import torch
 import cv2
@@ -6,6 +7,7 @@ import numpy as np
 from transformers import ViTImageProcessor, ViTForImageClassification
 from PIL import Image
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__)
 CORS(app)  # 🔥 FIXES CORS ERROR
 
@@ -65,6 +67,11 @@ def detect():
     emotion = emotions[pred]
 
     return jsonify({"emotion": emotion})
+
+
+@app.route("/", methods=["GET"])
+def index():
+    return send_from_directory(BASE_DIR, "index.html")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voice Emotion Detector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .header {
+            text-align: center;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        h1 {
+            font-size: 3em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            transition: all 0.8s ease;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.8;
+            transition: all 0.8s ease;
+        }
+
+        .audio-section {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.8s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .microphone-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .recording-indicator {
+            display: none;
+            font-size: 1.2em;
+            margin: 15px 0;
+            padding: 10px 20px;
+            background: rgba(255, 0, 0, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-weight: bold;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .recording-indicator.active {
+            display: block;
+        }
+
+        .emotion-display {
+            text-align: center;
+            margin-top: 30px;
+            animation: fadeIn 0.8s ease;
+        }
+
+        #emotionIcon {
+            font-size: 4em;
+            margin-bottom: 15px;
+            animation: bounce 0.6s ease;
+        }
+
+        #emotionText {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin: 20px 0;
+            transition: all 0.8s ease;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .emotion-description {
+            font-size: 1.1em;
+            margin-top: 15px;
+            opacity: 0.9;
+            transition: all 0.8s ease;
+            min-height: 60px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            background-color: rgba(255, 255, 255, 0.3);
+            color: inherit;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #startBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        #stopBtn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .stats {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            transition: all 0.8s ease;
+            min-width: 250px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stats p {
+            margin: 10px 0;
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* EMOTION-SPECIFIC STYLES */
+
+        /* Happy */
+        body.happy {
+            background: linear-gradient(135deg, #FFE066 0%, #FFC93C 100%);
+            color: #333;
+        }
+        body.happy h1 { color: #FF9800; }
+        body.happy #emotionText { color: #FF6B35; }
+        body.happy .audio-section { background: rgba(255, 200, 0, 0.2); border-color: #FFE066; box-shadow: 0 20px 60px rgba(255, 152, 0, 0.4); }
+        body.happy .stats { background: rgba(255, 200, 0, 0.2); border-color: #FFE066; }
+
+        /* Sad */
+        body.sad {
+            background: linear-gradient(135deg, #6FA8DC 0%, #4A90E2 100%);
+            color: #fff;
+        }
+        body.sad h1 { color: #FFFFFF; }
+        body.sad #emotionText { color: #E8F4F8; }
+        body.sad .audio-section { background: rgba(74, 144, 226, 0.2); border-color: #6FA8DC; box-shadow: 0 20px 60px rgba(74, 144, 226, 0.4); }
+        body.sad .stats { background: rgba(74, 144, 226, 0.2); border-color: #6FA8DC; }
+
+        /* Angry */
+        body.angry {
+            background: linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%);
+            color: #fff;
+        }
+        body.angry h1 { color: #FFFFFF; text-shadow: 0 4px 15px rgba(238, 90, 82, 0.5); }
+        body.angry #emotionText { color: #FFE5E5; font-size: 3em; }
+        body.angry .audio-section { background: rgba(255, 107, 107, 0.2); border-color: #FF6B6B; box-shadow: 0 20px 60px rgba(255, 107, 107, 0.5); }
+        body.angry .stats { background: rgba(255, 107, 107, 0.2); border-color: #FF6B6B; }
+
+        /* Fear */
+        body.fear {
+            background: linear-gradient(135deg, #B39DDB 0%, #9575CD 100%);
+            color: #fff;
+        }
+        body.fear h1 { color: #F3E5F5; }
+        body.fear #emotionText { color: #E1BEE7; }
+        body.fear .audio-section { background: rgba(179, 157, 219, 0.2); border-color: #B39DDB; box-shadow: 0 20px 60px rgba(179, 157, 219, 0.4); }
+        body.fear .stats { background: rgba(179, 157, 219, 0.2); border-color: #B39DDB; }
+
+        /* Surprise */
+        body.surprise {
+            background: linear-gradient(135deg, #FFD1DC 0%, #FF69B4 100%);
+            color: #fff;
+        }
+        body.surprise h1 { color: #FFFFFF; }
+        body.surprise #emotionText { color: #FFF5F7; font-size: 2.8em; }
+        body.surprise .audio-section { background: rgba(255, 105, 180, 0.2); border-color: #FFD1DC; box-shadow: 0 20px 60px rgba(255, 105, 180, 0.4); }
+        body.surprise .stats { background: rgba(255, 105, 180, 0.2); border-color: #FFD1DC; }
+
+        /* Disgust */
+        body.disgust {
+            background: linear-gradient(135deg, #8BC34A 0%, #6FAD59 100%);
+            color: #fff;
+        }
+        body.disgust h1 { color: #FFFFFF; }
+        body.disgust #emotionText { color: #E8F5E9; }
+        body.disgust .audio-section { background: rgba(139, 195, 74, 0.2); border-color: #8BC34A; box-shadow: 0 20px 60px rgba(139, 195, 74, 0.4); }
+        body.disgust .stats { background: rgba(139, 195, 74, 0.2); border-color: #8BC34A; }
+
+        /* Neutral */
+        body.neutral {
+            background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%);
+            color: #333;
+        }
+        body.neutral h1 { color: #424242; }
+        body.neutral #emotionText { color: #616161; }
+        body.neutral .audio-section { background: rgba(224, 224, 224, 0.3); border-color: #E0E0E0; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); }
+        body.neutral .stats { background: rgba(224, 224, 224, 0.3); border-color: #E0E0E0; }
+
+    </style>
+</head>
+
+<body class="neutral">
+
+<div class="container">
+    <div class="header">
+        <h1>🎤 Voice Emotion Detection</h1>
+        <p class="subtitle">AI-Powered Speech Emotion Recognition</p>
+    </div>
+
+    <div class="audio-section">
+        <div class="microphone-icon">🎙️</div>
+        <div class="recording-indicator" id="recordingIndicator">● Recording...</div>
+        <p style="opacity: 0.8; margin-top: 15px;">Click the button below to start recording your voice</p>
+    </div>
+
+    <div class="emotion-display">
+        <div id="emotionIcon">😐</div>
+        <h2 id="emotionText">Ready to Detect</h2>
+        <p class="emotion-description" id="emotionDesc">Record your voice to detect emotion...</p>
+    </div>
+
+    <div class="controls">
+        <button id="startBtn">Start Recording</button>
+        <button id="stopBtn" disabled>Stop Recording</button>
+    </div>
+
+    <div class="stats">
+        <p><strong>Status:</strong> <span id="status">Ready</span></p>
+        <p><strong>Confidence:</strong> <span id="confidence">N/A</span></p>
+        <p><strong>Model:</strong> Wav2Vec2 Speech Emotion</p>
+    </div>
+</div>
+
+<script>
+
+let mediaRecorder;
+let audioChunks = [];
+let stream;
+
+const startBtn = document.getElementById("startBtn");
+const stopBtn = document.getElementById("stopBtn");
+const emotionText = document.getElementById("emotionText");
+const emotionIcon = document.getElementById("emotionIcon");
+const emotionDesc = document.getElementById("emotionDesc");
+const recordingIndicator = document.getElementById("recordingIndicator");
+const statusText = document.getElementById("status");
+const confidenceText = document.getElementById("confidence");
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+const SILENCE_THRESHOLD = 0.01;
+
+async function isAudioSilent(blob) {
+    try {
+        const arrayBuffer = await blob.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        let maxValue = 0;
+
+        for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+            const channelData = audioBuffer.getChannelData(channel);
+            for (let i = 0; i < channelData.length; i++) {
+                maxValue = Math.max(maxValue, Math.abs(channelData[i]));
+                if (maxValue >= SILENCE_THRESHOLD) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    } catch (err) {
+        console.warn("Audio silence detection failed, sending to server anyway.", err);
+        return false;
+    }
+}
+
+const emotionData = {
+    "angry": {
+        icon: "😠",
+        desc: "Take a deep breath and relax. 🧘",
+        class: "angry"
+    },
+    "disgust": {
+        icon: "🤢",
+        desc: "Let's focus on the positive things! 🌈",
+        class: "disgust"
+    },
+    "fear": {
+        icon: "😨",
+        desc: "Stay calm and brave! You've got this. 💪",
+        class: "fear"
+    },
+    "happy": {
+        icon: "😊",
+        desc: "You're feeling great! Keep smiling! 🌟",
+        class: "happy"
+    },
+    "sad": {
+        icon: "😢",
+        desc: "Cheer up! Things will get better. 💙",
+        class: "sad"
+    },
+    "surprise": {
+        icon: "😲",
+        desc: "Wow! Something amazing just happened! ✨",
+        class: "surprise"
+    },
+    "neutral": {
+        icon: "😐",
+        desc: "Looking neutral right now. 👀",
+        class: "neutral"
+    }
+};
+
+// Request mic permission once
+async function initMic() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+        alert("Microphone access denied!");
+        statusText.innerText = "Microphone access denied";
+        statusText.style.color = "#F44336";
+        console.error(err);
+    }
+}
+initMic();
+
+// =======================
+// Start Recording
+// =======================
+startBtn.onclick = () => {
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = sendAudioToServer;
+
+    mediaRecorder.start();
+
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    recordingIndicator.classList.add("active");
+    statusText.innerText = "Recording...";
+    statusText.style.color = "#FF9800";
+};
+
+// =======================
+// Stop Recording
+// =======================
+stopBtn.onclick = () => {
+    mediaRecorder.stop();
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    recordingIndicator.classList.remove("active");
+    statusText.innerText = "Processing...";
+    statusText.style.color = "#2196F3";
+};
+
+// =======================
+// Send audio to backend
+// =======================
+async function sendAudioToServer() {
+    const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+
+    if (await isAudioSilent(audioBlob)) {
+        statusText.innerText = "No voice detected";
+        statusText.style.color = "#FF9800";
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", audioBlob, "recording.webm");
+
+    try {
+        const response = await fetch("/predict-emotion", { method: "POST", body: formData });
+        const result = await response.json();
+
+        if (result.error) {
+            emotionText.innerText = "Error";
+            emotionIcon.innerText = "❌";
+            emotionDesc.innerText = "Error: " + result.error;
+            statusText.innerText = "Error";
+            statusText.style.color = "#F44336";
+            document.body.className = "neutral";
+            return;
+        }
+
+        const emotion = result.emotion.toLowerCase();
+        const confidence = result.confidence || "N/A";
+        const emotionInfo = emotionData[emotion] || emotionData["neutral"];
+
+        // Update emotion display
+        emotionText.innerText = result.emotion;
+        emotionIcon.innerText = emotionInfo.icon;
+        emotionDesc.innerText = emotionInfo.desc;
+        confidenceText.innerText = confidence;
+
+        // Update body class for styling
+        document.body.className = emotionInfo.class;
+
+        statusText.innerText = "✓ Detected";
+        statusText.style.color = "#4CAF50";
+
+    } catch (err) {
+        emotionText.innerText = "Connection Error";
+        emotionIcon.innerText = "⚠️";
+        emotionDesc.innerText = "Error connecting to server";
+        statusText.innerText = "Connection Error";
+        statusText.style.color = "#F44336";
+        document.body.className = "neutral";
+        console.error("Error:", err);
+    }
+}
+
+</script>
+
+</body>
+</html>

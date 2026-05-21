@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Keystroke Emotion Demo</title>
+    <style>body{font-family:sans-serif;padding:20px}textarea{width:100%;height:160px}</style>
+  </head>
+  <body>
+    <h3>Keystroke Emotion Demo</h3>
+    <p>Type in the box below. Predictions for the last keystroke are shown.</p>
+    <textarea id="input"></textarea>
+    <div id="out"></div>
+
+    <script>
+      const textarea = document.getElementById('input');
+      const out = document.getElementById('out');
+      const pendingDown = {};
+      const history = [];
+
+      function clampHistory() {
+        while (history.length > 3) history.shift();
+      }
+
+      function computeFeatures(events) {
+        const [e1, e2, e3] = events;
+        return {
+          hold_time: e3.up - e3.down,
+          prev_hold_time: e2.up - e2.down,
+          down_to_down: e3.down - e2.down,
+          up_to_down: e3.down - e2.up,
+          up_to_up: e3.up - e2.up,
+          down_to_up_prev: e3.up - e2.down,
+          down_to_down2: e3.down - e1.down,
+          down_to_up2: e3.up - e1.down,
+        };
+      }
+
+      textarea.addEventListener('keydown', (e) => {
+        pendingDown[e.code] = performance.now();
+      });
+
+      textarea.addEventListener('keyup', async (e) => {
+        const up = performance.now();
+        const down = pendingDown[e.code] || up;
+        delete pendingDown[e.code];
+
+        history.push({down, up, key: e.code});
+        clampHistory();
+
+        if (history.length < 3) {
+          out.innerText = 'Type at least 3 keys to predict emotion...';
+          return;
+        }
+
+        const payload = computeFeatures(history);
+
+        try {
+          const res = await fetch('/predict', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+          });
+          const j = await res.json();
+          out.innerText = 'Emotion: ' + (j.emotion || j.error) + ' (conf=' + (j.confidence || 0) + ')';
+        } catch (err) {
+          out.innerText = 'Error: ' + err.message;
+        }
+      });
+    </script>
+  </body>
+</html>

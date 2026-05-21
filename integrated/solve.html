@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solve Problem - Neetcode Emotion UI</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #020617;
+      --surface: rgba(15, 23, 42, 0.92);
+      --surface-soft: rgba(148, 163, 184, 0.08);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-strong: #7c3aed;
+      --border: rgba(148, 163, 184, 0.18);
+      --shadow: 0 30px 80px rgba(15, 23, 42, 0.48);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 25%),
+        radial-gradient(circle at bottom right, rgba(124, 58, 237, 0.14), transparent 24%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+
+    .page {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .back-btn {
+      padding: 12px 20px;
+      border-radius: 999px;
+      background: rgba(124, 58, 237, 0.16);
+      color: #7dd3fc;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .back-btn:hover {
+      background: rgba(124, 58, 237, 0.24);
+      transform: translateX(-2px);
+    }
+
+    .problem-header {
+      display: flex;
+      gap: 16px;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.12);
+      color: #7dd3fc;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .workspace-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 28px;
+      margin-bottom: 48px;
+    }
+
+    .workspace-panel {
+      display: grid;
+      gap: 20px;
+    }
+
+    .problem-description {
+      padding: 24px;
+      border-radius: 24px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      box-shadow: var(--shadow);
+    }
+
+    .problem-description h2 {
+      margin-bottom: 14px;
+      font-size: 1.2rem;
+    }
+
+    .problem-description p {
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+
+    #code-editor {
+      width: 100%;
+      min-height: 400px;
+      padding: 18px;
+      border-radius: 24px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      resize: vertical;
+      outline: none;
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.2s ease, background 0.2s ease;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #7c3aed, #38bdf8);
+      color: #fff;
+      box-shadow: 0 18px 32px rgba(124, 58, 237, 0.24);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      color: var(--text);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .panel {
+      padding: 24px;
+      border-radius: 24px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      box-shadow: var(--shadow);
+    }
+
+    .panel h3 {
+      margin-bottom: 14px;
+      font-size: 1.15rem;
+    }
+
+    .note {
+      margin-top: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: rgba(99, 102, 241, 0.16);
+      color: #c7d2fe;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .mini-video {
+      width: 100%;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: #000;
+      min-height: 140px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .mini-video video {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .emotion-grid,
+    .action-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .emotion-button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+      font-size: 0.95rem;
+    }
+
+    .emotion-button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(148, 163, 184, 0.22);
+    }
+
+    .emotion-button.active {
+      background: rgba(56, 189, 248, 0.16);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .source-summary {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.4;
+      min-height: 40px;
+    }
+
+    .progress {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.14);
+      overflow: hidden;
+      margin-top: 12px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.5s ease, background 0.3s ease;
+      background: linear-gradient(135deg, #38bdf8, #7c3aed);
+    }
+
+    .emotion-happy {
+      background: radial-gradient(circle at top left, rgba(251, 191, 36, 0.22), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.12), transparent 24%),
+        #020617;
+    }
+
+    .emotion-sad {
+      background: radial-gradient(circle at top left, rgba(251, 191, 36, 0.24), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(251, 191, 36, 0.12), transparent 24%),
+        #0f1720;
+    }
+
+    body.emotion-sad {
+      --bg: #fff8dc;
+      --surface: rgba(255, 247, 209, 0.96);
+      --surface-soft: rgba(251, 191, 36, 0.18);
+      --text: #0f172a;
+      --muted: #475569;
+      --accent: #f59e0b;
+      --accent-strong: #fbbf24;
+      --border: rgba(245, 158, 11, 0.28);
+      --shadow: 0 30px 80px rgba(133, 77, 14, 0.12);
+      background: radial-gradient(circle at top left, rgba(251, 191, 36, 0.24), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(249, 115, 22, 0.12), transparent 24%),
+        #fff7d0;
+      color: #0f172a;
+    }
+
+    body.emotion-sad .page {
+      background: rgba(255, 248, 224, 0.95);
+    }
+
+    body.emotion-sad .problem-description,
+    body.emotion-sad .panel {
+      background: rgba(255, 250, 213, 0.98);
+      border-color: rgba(245, 158, 11, 0.22);
+      box-shadow: 0 24px 60px rgba(133, 77, 14, 0.10);
+    }
+
+    body.emotion-sad .back-btn {
+      background: rgba(251, 191, 36, 0.16);
+      color: #1f2937;
+    }
+
+    body.emotion-sad .btn-primary {
+      background: linear-gradient(135deg, #f59e0b, #facc15);
+      color: #1f2937;
+    }
+
+    body.emotion-sad .btn-secondary {
+      color: #1f2937;
+      border-color: rgba(245, 158, 11, 0.30);
+      background: rgba(251, 191, 36, 0.14);
+    }
+
+    body.emotion-sad .status-pill,
+    body.emotion-sad .badge,
+    body.emotion-sad .emotion-button.active,
+    body.emotion-sad .progress-bar {
+      background: linear-gradient(135deg, #facc15, #fb923c);
+      color: #111827;
+    }
+
+    .emotion-stressed {
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.24), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.12), transparent 24%),
+        #071930;
+    }
+
+    body.emotion-stressed {
+      --bg: #e7f5ff;
+      --surface: rgba(235, 248, 255, 0.96);
+      --surface-soft: rgba(56, 189, 248, 0.14);
+      --text: #0f172a;
+      --muted: #475569;
+      --accent: #38bdf8;
+      --accent-strong: #0ea5e9;
+      --border: rgba(14, 165, 233, 0.28);
+      --shadow: 0 30px 80px rgba(14, 165, 233, 0.14);
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.24), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.12), transparent 24%),
+        #e9f7ff;
+      color: #0f172a;
+    }
+
+    body.emotion-stressed .page {
+      background: rgba(230, 245, 255, 0.95);
+    }
+
+    body.emotion-stressed .problem-description,
+    body.emotion-stressed .panel {
+      background: rgba(238, 249, 255, 0.98);
+      border-color: rgba(56, 189, 248, 0.22);
+      box-shadow: 0 24px 60px rgba(14, 165, 233, 0.12);
+    }
+
+    body.emotion-stressed .back-btn {
+      background: rgba(56, 189, 248, 0.16);
+      color: #0f172a;
+    }
+
+    body.emotion-stressed .btn-primary {
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      color: #0f172a;
+    }
+
+    body.emotion-stressed .btn-secondary {
+      color: #0f172a;
+      border-color: rgba(56, 189, 248, 0.30);
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    body.emotion-stressed .status-pill,
+    body.emotion-stressed .badge,
+    body.emotion-stressed .emotion-button.active,
+    body.emotion-stressed .progress-bar {
+      background: linear-gradient(135deg, #38bdf8, #7dd3fc);
+      color: #111827;
+    }
+
+    .emotion-focused {
+      background: radial-gradient(circle at top left, rgba(14, 165, 233, 0.22), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.12), transparent 24%),
+        #081018;
+    }
+
+    .emotion-happy .status-pill,
+    .emotion-happy .badge,
+    .emotion-happy .emotion-button.active,
+    .emotion-happy .progress-bar {
+      background: linear-gradient(135deg, #facc15, #22c55e);
+      color: #111827;
+    }
+
+    .emotion-sad .status-pill,
+    .emotion-sad .badge,
+    .emotion-sad .emotion-button.active,
+    .emotion-sad .progress-bar {
+      background: linear-gradient(135deg, #60a5fa, #c084fc);
+      color: #111827;
+    }
+
+    .emotion-stressed .status-pill,
+    .emotion-stressed .badge,
+    .emotion-stressed .emotion-button.active,
+    .emotion-stressed .progress-bar {
+      background: linear-gradient(135deg, #ef4444, #f59e0b);
+      color: #111827;
+    }
+
+    .emotion-focused .status-pill,
+    .emotion-focused .badge,
+    .emotion-focused .emotion-button.active,
+    .emotion-focused .progress-bar {
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      color: #111827;
+    }
+
+    /* Cheerful overlay shown when aggregated emotion is sad/stressed */
+    .cheerful-overlay {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      width: 320px;
+      max-width: calc(100% - 48px);
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.92));
+      color: #0f172a;
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(2,6,23,0.6);
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      transform: translateY(12px);
+      animation: slideUp 600ms ease forwards;
+      z-index: 9999;
+    }
+
+    .cheerful-overlay.calm {
+      background: linear-gradient(180deg, rgba(239, 246, 255, 0.98), rgba(219, 234, 254, 0.95));
+      border: 1px solid rgba(56, 189, 248, 0.22);
+      color: #0f172a;
+    }
+
+    .cheerful-emoji {
+      font-size: 44px;
+      line-height: 1;
+      transform-origin: center;
+      animation: bounce 1400ms ease infinite;
+    }
+
+    .cheerful-overlay.calm .cheerful-quote {
+      color: #334155;
+    }
+
+    .cheerful-text {
+      flex: 1;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .cheerful-quote {
+      margin-top: 6px;
+      font-weight: 600;
+      font-size: 12px;
+      color: #475569;
+    }
+
+    @keyframes bounce {
+      0% { transform: translateY(0) scale(1); }
+      30% { transform: translateY(-6px) scale(1.06); }
+      60% { transform: translateY(0) scale(0.98); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cheerful override when we want to lift mood */
+    body.cheerful-override {
+      position: relative;
+      background: radial-gradient(circle at top left, rgba(251, 191, 36, 0.32), transparent 24%),
+                  radial-gradient(circle at bottom right, rgba(249, 115, 22, 0.22), transparent 24%),
+                  linear-gradient(180deg, #fff6be, #ffe081);
+      color: #1f2937;
+    }
+
+    body.cheerful-override .page,
+    body.cheerful-override .problem-description,
+    body.cheerful-override .panel,
+    body.cheerful-override #code-editor,
+    body.cheerful-override .mini-video,
+    body.cheerful-override .status-pill,
+    body.cheerful-override .badge,
+    body.cheerful-override .emotion-button.active,
+    body.cheerful-override .progress-bar,
+    body.cheerful-override .back-btn,
+    body.cheerful-override .btn-primary,
+    body.cheerful-override .btn-secondary,
+    body.cheerful-override .hero-copy p,
+    body.cheerful-override .hero-card p,
+    body.cheerful-override .problem-card p,
+    body.cheerful-override .workspace-card p,
+    body.cheerful-override .source-field span,
+    body.cheerful-override .source-summary,
+    body.cheerful-override .note,
+    body.cheerful-override .footer {
+      color: #1f2937;
+    }
+
+    body.cheerful-override .page,
+    body.cheerful-override .problem-description,
+    body.cheerful-override .panel,
+    body.cheerful-override #code-editor,
+    body.cheerful-override .mini-video {
+      background: rgba(255, 250, 205, 0.98);
+      border-color: rgba(245, 158, 11, 0.22);
+      box-shadow: 0 24px 60px rgba(133, 77, 14, 0.10);
+    }
+
+    body.cheerful-override .back-btn,
+    body.cheerful-override .btn-secondary {
+      color: #1f2937;
+      border-color: rgba(245, 158, 11, 0.28);
+      background: rgba(251, 191, 36, 0.16);
+    }
+
+    body.cheerful-override .btn-primary {
+      background: linear-gradient(135deg, #f59e0b, #facc15);
+      color: #1f2937;
+    }
+
+    body.cheerful-override .status-pill,
+    body.cheerful-override .badge,
+    body.cheerful-override .emotion-button.active,
+    body.cheerful-override .progress-bar {
+      background: linear-gradient(135deg, #facc15, #fb923c);
+      color: #1f2937;
+    }
+
+    body.cheerful-override .hero-copy p,
+    body.cheerful-override .hero-card p,
+    body.cheerful-override .problem-card p,
+    body.cheerful-override .workspace-card p,
+    body.cheerful-override .source-field span,
+    body.cheerful-override .source-summary,
+    body.cheerful-override .note,
+    body.cheerful-override .footer {
+      color: #525252;
+    }
+
+    body.cheerful-override .footer {
+      border-top-color: rgba(245, 158, 11, 0.18);
+    }
+
+    body.cheerful-override .mini-video {
+      background: rgba(251, 191, 36, 0.14);
+      border-color: rgba(245, 158, 11, 0.18);
+    }
+
+    body.cheerful-override .cheerful-emoji {
+      animation: bounce 1200ms ease infinite;
+    }
+
+    body.cheerful-override .cheerful-overlay {
+      background: linear-gradient(180deg, rgba(255, 243, 175, 0.98), rgba(254, 225, 125, 0.95));
+      color: #1f2937;
+      border: 1px solid rgba(245, 158, 11, 0.22);
+    }
+
+    body.cheerful-override .cheerful-quote {
+      color: #525252;
+    }
+
+    body.calm-override {
+      position: relative;
+      background: radial-gradient(circle at top left, rgba(207, 232, 255, 0.35), transparent 24%),
+                  radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.18), transparent 24%),
+                  linear-gradient(180deg, #eff6ff, #dbeafe);
+      color: #0f172a;
+    }
+
+    body.calm-override .page,
+    body.calm-override .problem-description,
+    body.calm-override .panel,
+    body.calm-override #code-editor,
+    body.calm-override .mini-video {
+      background: rgba(238, 249, 255, 0.98);
+      border-color: rgba(56, 189, 248, 0.22);
+      box-shadow: 0 24px 60px rgba(14, 165, 233, 0.10);
+    }
+
+    body.calm-override .back-btn,
+    body.calm-override .btn-secondary {
+      color: #0f172a;
+      border-color: rgba(56, 189, 248, 0.28);
+      background: rgba(56, 189, 248, 0.14);
+    }
+
+    body.calm-override .btn-primary {
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      color: #0f172a;
+    }
+
+    body.calm-override .status-pill,
+    body.calm-override .badge,
+    body.calm-override .emotion-button.active,
+    body.calm-override .progress-bar {
+      background: linear-gradient(135deg, #38bdf8, #7dd3fc);
+      color: #111827;
+    }
+
+    body.calm-override .cheerful-overlay {
+      background: linear-gradient(180deg, rgba(239, 246, 255, 0.98), rgba(219, 234, 254, 0.95));
+      color: #0f172a;
+      border: 1px solid rgba(56, 189, 248, 0.22);
+    }
+
+    body.calm-override .cheerful-quote {
+      color: #334155;
+    }
+
+    /* Cheer banner */
+    .cheer-banner {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 1200;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(2,6,23,0.35);
+      background: linear-gradient(90deg, #fff5cc, #f0fff4);
+      color: #052018;
+      transform: translateY(20px) scale(0.98);
+      opacity: 0;
+      transition: transform 0.36s cubic-bezier(.2,.9,.3,1), opacity 0.36s ease;
+    }
+
+    .cheer-banner.show {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    .cheer-emoji {
+      font-size: 26px;
+      animation: floatEmoji 3s ease-in-out infinite;
+    }
+
+    @keyframes floatEmoji {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-6px) rotate(-6deg); }
+      100% { transform: translateY(0); }
+    }
+
+    .cheer-quote {
+      font-weight: 700;
+      font-size: 0.98rem;
+      line-height: 1.2;
+    }
+
+    @media (max-width: 1100px) {
+      .workspace-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .page {
+        padding: 20px 16px 32px;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      #code-editor {
+        min-height: 300px;
+      }
+    }
+  </style>
+</head>
+<body class="emotion-focused">
+  <div class="page">
+    <div class="topbar">
+      <a href="index.html" class="back-btn">← Back to Problems</a>
+    </div>
+
+    <div class="problem-header">
+      <h1 id="problem-title">Two Sum</h1>
+      <div class="badge" id="problem-badge">Easy</div>
+    </div>
+
+    <div class="workspace-layout">
+      <div class="workspace-panel">
+        <div class="problem-description">
+          <h2>Problem Statement</h2>
+          <p id="problem-description">Given an array of integers, return indices of the two numbers such that they add up to a specific target.</p>
+        </div>
+
+        <div class="panel">
+          <h3>Your Solution</h3>
+          <textarea id="code-editor" placeholder="Write your solution here..."></textarea>
+          <div class="editor-actions">
+            <button class="btn btn-secondary" id="clear-code">Clear</button>
+            <button class="btn btn-primary" id="predict-keystroke">Analyze Typing</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="workspace-panel">
+        <!-- Manual emotion buttons removed: detection will control theme -->
+
+        <div class="panel">
+          <h3>Webcam</h3>
+          <p class="note">Capture face emotion from webcam.</p>
+          <div class="mini-video"><video id="camera-preview" autoplay muted playsinline></video></div>
+          <div class="action-grid">
+            <button class="btn btn-secondary" id="start-camera">Start Camera</button>
+            <button class="btn btn-secondary" id="stop-camera" disabled>Stop Camera</button>
+            <button class="btn btn-primary" id="capture-face" style="display: none;">Capture</button>
+          </div>
+          <p class="source-summary" id="face-status">Waiting for continuous webcam.</p>
+        </div>
+
+        <div class="panel">
+          <h3>Voice</h3>
+          <p class="note">Continuous voice capture will analyze your audio in short chunks while recording.</p>
+          <div class="action-grid">
+            <button class="btn btn-secondary" id="start-record">Start</button>
+            <button class="btn btn-secondary" id="stop-record">Stop</button>
+          </div>
+          <p class="source-summary" id="voice-status">Waiting to record...</p>
+        </div>
+
+        <div class="panel">
+          <h3>Keystroke</h3>
+          <p class="note">Typing is continuously analyzed as you type. Use the button only to force an immediate update.</p>
+          <button class="btn btn-primary" id="predict-keystroke-sidebar">Analyze Now</button>
+          <p class="source-summary" id="keystroke-status">Waiting for typing...</p>
+        </div>
+
+        <div class="panel">
+          <h3>Current Emotion</h3>
+          <div class="status-pill" id="current-emotion">Focused mode</div>
+          <div class="status-pill" id="current-source">Source: manual</div>
+          <p class="progress"><div class="progress-bar" id="completion-bar" style="width: 64%;"></div></p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const problemId = params.get('problem') || 'two-sum';
+
+    const problemLibrary = {
+      'two-sum': {
+        title: 'Two Sum',
+        difficulty: 'Easy',
+        description: 'Given an array of integers nums and an integer target, return the indices i and j such that nums[i] + nums[j] == target and i != j.\n\nYou may assume that each input has exactly one solution, and you may not use the same element twice.\n\nReturn the answer in any order.',
+        starter: `function twoSum(nums, target) {
+  // Write your solution here.
+  // Return the indices [i, j] where nums[i] + nums[j] === target
+}`
+      },
+      'longest-substring': {
+        title: 'Longest Substring Without Repeating Characters',
+        difficulty: 'Medium',
+        description: 'Given a string s, find the length of the longest substring without repeating characters.',
+        starter: `function lengthOfLongestSubstring(s) {
+  // Write your solution here.
+  // Use a sliding window or hash map approach
+}`
+      },
+      'course-schedule': {
+        title: 'Course Schedule',
+        difficulty: 'Medium',
+        description: 'You are given an integer numCourses representing the number of courses you have to take, labeled from 0 to numCourses - 1.\n\nYou are also given an array prerequisites where prerequisites[i] = [ai, bi] indicates that you must take course bi first if you want to take course ai.\n\nReturn true if you can finish all courses. Otherwise, return false.',
+        starter: `function canFinish(numCourses, prerequisites) {
+  // Write your solution here.
+  // Use topological sort or cycle detection
+}`
+      }
+    };
+
+    const problem = problemLibrary[problemId] || problemLibrary['two-sum'];
+
+    document.getElementById('problem-title').textContent = problem.title;
+    document.getElementById('problem-badge').textContent = problem.difficulty;
+    document.getElementById('problem-description').textContent = problem.description;
+    document.getElementById('code-editor').value = problem.starter;
+
+    // Manual emotion buttons removed — UI will update from detected sources only
+    const buttons = document.querySelectorAll('.emotion-button');
+    const status = document.getElementById('current-emotion');
+    const sourceStatus = document.getElementById('current-source');
+    const completionBar = document.getElementById('completion-bar');
+    const cameraPreview = document.getElementById('camera-preview');
+    const startCameraBtn = document.getElementById('start-camera');
+    const captureFaceBtn = document.getElementById('capture-face');
+    const faceStatus = document.getElementById('face-status');
+    const startRecordBtn = document.getElementById('start-record');
+    const stopRecordBtn = document.getElementById('stop-record');
+    const voiceStatus = document.getElementById('voice-status');
+    const predictKeystrokeBtn = document.getElementById('predict-keystroke');
+    const predictKeystrokeSidebarBtn = document.getElementById('predict-keystroke-sidebar');
+    const stopCameraBtn = document.getElementById('stop-camera');
+    const keystrokeStatus = document.getElementById('keystroke-status');
+    const codeEditor = document.getElementById('code-editor');
+    const clearCodeBtn = document.getElementById('clear-code');
+
+    const emotionConfig = {
+      happy: { label: 'Happy', width: '83%' },
+      sad: { label: 'Sad', width: '46%' },
+      stressed: { label: 'Stressed', width: '54%' },
+      focused: { label: 'Focused', width: '64%' }
+    };
+
+    const sourceState = {
+      face: 'focused',
+      voice: 'focused',
+      keystroke: 'focused'
+    };
+
+    let lastSource = 'manual';
+    let cameraStream = null;
+    let voiceStream = null;
+    let cameraInterval = null;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let voiceAudioContext = null;
+    let voiceAnalyser = null;
+    let voiceVolume = 0;
+    let voiceAnalysisTimer = null;
+    const keystrokeHistory = [];
+    const pendingDown = {};
+    let typingTimer = null;
+    const TYPING_DEBOUNCE_MS = 1200;
+    const VOICE_SILENCE_THRESHOLD = 0.02;
+    const VOICE_MIN_BYTES = 3000;
+    const WINDOW_DURATION = 5; // seconds
+    const CHEERFUL_HOLD_DURATION = 300; // 5 minutes in seconds
+    let cheerfulHoldUntil = 0; // timestamp when cheerful hold expires
+    
+    // Window management
+    let windowCheckInterval = null;
+    let windowStartTime = Date.now();
+    let windowActive = true;
+    // Hold management (display aggregated emotion for next WINDOW_DURATION seconds)
+    let holdActive = false;
+    let holdStartTime = 0;
+    let lastAggregatedEmotion = null;
+
+    function getCombinedEmotion() {
+      const counts = Object.values(sourceState).reduce((acc, value) => {
+        acc[value] = (acc[value] || 0) + 1;
+        return acc;
+      }, {});
+
+      const sortedEmotion = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      if (sortedEmotion.length === 0) return 'focused';
+      if (sortedEmotion[0][1] >= 2) return sortedEmotion[0][0];
+      return sourceState[lastSource] || 'focused';
+    }
+
+    // ===========================
+    // WINDOW MANAGEMENT
+    // ===========================
+    
+    async function initializeEmotionWindow() {
+      // Initialize a new 5-second emotion analysis window
+      try {
+        const response = await fetch('/api/reset-emotion-window', { method: 'POST' });
+        const result = await response.json();
+        windowStartTime = Date.now();
+        windowActive = true;
+        startWindowTimer();
+      } catch (error) {
+        console.error('Failed to initialize window:', error);
+      }
+    }
+    
+    async function getWindowProgress() {
+      // Get current window progress from server
+      try {
+        const response = await fetch('/api/window-status');
+        const result = await response.json();
+        return result;
+      } catch (error) {
+        console.error('Failed to get window status:', error);
+        return null;
+      }
+    }
+    
+    async function getWeightedEmotion() {
+      // Poll server for weighted emotion calculation
+      try {
+        const response = await fetch('/api/combined-emotion');
+        const result = await response.json();
+        return result;
+      } catch (error) {
+        console.error('Failed to get weighted emotion:', error);
+        return null;
+      }
+    }
+    
+    function updateWindowDisplay() {
+      // Update the window timer display
+      if (holdActive) {
+        const holdElapsed = Date.now() - holdStartTime;
+        const holdRemaining = Math.max(0, (WINDOW_DURATION * 1000 - holdElapsed) / 1000);
+        completionBar.style.width = '100%';
+        sourceStatus.textContent = `Holding aggregate (${lastAggregatedEmotion}) — ${holdRemaining.toFixed(1)}s remaining`;
+        return;
+      }
+
+      const elapsed = (Date.now() - windowStartTime) / 1000;
+      const remaining = Math.max(0, WINDOW_DURATION - elapsed);
+      const progress = Math.min(elapsed / WINDOW_DURATION, 1.0);
+
+      // Update completion bar to show window progress
+      completionBar.style.width = (progress * 100) + '%';
+
+      // Update source summary to show time remaining
+      sourceStatus.textContent = `Window: ${remaining.toFixed(1)}s remaining`;
+    }
+    
+    function startWindowTimer() {
+      // Start the 5-second window analysis
+      if (windowCheckInterval) {
+        clearInterval(windowCheckInterval);
+      }
+      
+      // Update display every 500ms
+      windowCheckInterval = setInterval(updateWindowDisplay, 500);
+      
+      // Check window completion every second
+      const completionCheckInterval = setInterval(async () => {
+        const elapsed = (Date.now() - windowStartTime) / 1000;
+        
+        if (elapsed >= WINDOW_DURATION) {
+          clearInterval(completionCheckInterval);
+          await completeEmotionWindow();
+        }
+      }, 1000);
+    }
+    
+    async function completeEmotionWindow() {
+      // Complete the current window and apply the weighted emotion
+      windowActive = false;
+      
+      // Get the final weighted emotion from server
+      const emotionData = await getWeightedEmotion();
+      
+      if (emotionData && emotionData.emotion) {
+        const finalEmotion = emotionData.emotion.toLowerCase();
+
+        // By default update UI with final emotion
+        setEmotion(finalEmotion, 'automated analysis');
+
+        // Show completion status and HOLD the aggregated emotion for the next WINDOW_DURATION seconds
+        lastAggregatedEmotion = finalEmotion;
+        holdActive = true;
+        holdStartTime = Date.now();
+        sourceStatus.textContent = `✓ Window complete: ${finalEmotion} (confidence: ${(emotionData.confidence * 100).toFixed(0)}%) — holding for ${WINDOW_DURATION}s`;
+
+        // If the aggregated result is sad or stressed, show cheerful presentation (but continue background analysis)
+        if (finalEmotion === 'sad' || finalEmotion === 'stressed') {
+          // Only apply an override if not in a 5-minute hold period
+          if (Date.now() > cheerfulHoldUntil) {
+            if (finalEmotion === 'sad') {
+              document.body.classList.add('cheerful-override');
+            } else {
+              document.body.classList.add('calm-override');
+            }
+            setEmotion(finalEmotion, `automated analysis (${finalEmotion} override)`);
+            showCheerfulOverlay(finalEmotion);
+            
+            // Set hold period - during this time, don't show override again even if sad/stressed
+            cheerfulHoldUntil = Date.now() + (CHEERFUL_HOLD_DURATION * 1000);
+          }
+        }
+
+        // After WINDOW_DURATION, start the next window (background analysis continues)
+        setTimeout(() => {
+          holdActive = false;
+          // Remove any mood overlay after 5 minutes total
+          if (Date.now() > cheerfulHoldUntil) {
+            hideCheerfulOverlay();
+            document.body.classList.remove('cheerful-override');
+            document.body.classList.remove('calm-override');
+          }
+          initializeEmotionWindow();
+        }, WINDOW_DURATION * 1000);
+      }
+    }
+
+    function setEmotion(emotion, source = 'manual') {
+      const hadCheerfulOverride = document.body.classList.contains('cheerful-override');
+      const hadCalmOverride = document.body.classList.contains('calm-override');
+      document.body.classList.remove('emotion-happy', 'emotion-sad', 'emotion-stressed', 'emotion-focused');
+      document.body.classList.add(`emotion-${emotion}`);
+      if (hadCheerfulOverride) {
+        document.body.classList.add('cheerful-override');
+      }
+      if (hadCalmOverride) {
+        document.body.classList.add('calm-override');
+      }
+
+      // No manual buttons to toggle; emotion UI classes applied to body above
+
+      const config = emotionConfig[emotion] || emotionConfig.focused;
+      status.textContent = `${config.label} mode`;
+      sourceStatus.textContent = `Source: ${source}`;
+      completionBar.style.width = config.width;
+    }
+
+    // -------------------------
+    // Cheerful overlay helpers
+    // -------------------------
+    let cheerfulMessageTimers = [];
+
+    function showCheerfulOverlay(originalEmotion) {
+      // If already present, refresh
+      hideCheerfulOverlay();
+
+      const overlay = document.createElement('div');
+      overlay.id = 'cheerful-overlay';
+      overlay.className = 'cheerful-overlay';
+      if (originalEmotion === 'stressed') {
+        overlay.classList.add('calm');
+      }
+
+      const emoji = document.createElement('div');
+      emoji.className = 'cheerful-emoji';
+      emoji.textContent = originalEmotion === 'stressed' ? '🌿' : '😊';
+
+      const text = document.createElement('div');
+      text.className = 'cheerful-text';
+      
+      const messages = originalEmotion === 'stressed'
+        ? [
+            'Take a calm breath and keep your pace steady. 🌥️',
+            'A short pause can help the next step feel clearer. 🌿',
+            'Gentle progress is still progress. You are doing well.',
+            'Soft focus matters more than speed right now.',
+            'Let the sky feel calm, then return to the code.',
+            'A slow breath can turn stress into clarity.'
+          ]
+        : [
+            'You got this! 🌟',
+            'Keep going — small steps matter! 💪',
+            'Smile — you are doing great! 😊',
+            'Breathe in, code out. ✨',
+            'Every challenge makes you stronger! 🚀',
+            'You are making progress! 📈',
+            'Celebrate small wins! 🎉',
+            'You have overcome harder things before! 💯'
+          ];
+
+      const heading = originalEmotion === 'stressed'
+        ? 'Take a calm moment' 
+        : "Here's something to lift your mood";
+
+      text.innerHTML = `<div>${heading}</div><div class="cheerful-quote">${messages[0]}</div>`;
+
+      overlay.appendChild(emoji);
+      overlay.appendChild(text);
+      document.body.appendChild(overlay);
+
+      // Rotate through messages every 40 seconds
+      let currentIndex = 0;
+      const rotateMessages = () => {
+        const overlayEl = document.getElementById('cheerful-overlay');
+        if (!overlayEl) return; // overlay was hidden
+
+        currentIndex = (currentIndex + 1) % messages.length;
+        const quoteEl = overlayEl.querySelector('.cheerful-quote');
+        if (quoteEl) {
+          quoteEl.style.opacity = '0';
+          quoteEl.style.transition = 'opacity 0.4s ease';
+          
+          setTimeout(() => {
+            quoteEl.textContent = messages[currentIndex];
+            quoteEl.style.opacity = '1';
+          }, 200);
+        }
+
+        const timer = setTimeout(rotateMessages, 40000);
+        cheerfulMessageTimers.push(timer);
+      };
+
+      const timer = setTimeout(rotateMessages, 40000);
+      cheerfulMessageTimers.push(timer);
+    }
+
+    function hideCheerfulOverlay() {
+      const ex = document.getElementById('cheerful-overlay');
+      if (ex) ex.remove();
+      
+      // Clear all pending message rotation timers
+      cheerfulMessageTimers.forEach(timer => clearTimeout(timer));
+      cheerfulMessageTimers = [];
+    }
+
+    function updateFromSources(origin) {
+      // Store the source data but don't update UI immediately - let window system handle it
+      lastSource = origin;
+      // Data is being collected on the server side
+      // UI will be updated when the 5-second window completes
+    }
+
+    async function startCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        faceStatus.textContent = 'Webcam not supported.';
+        return;
+      }
+      try {
+        if (cameraStream) {
+          faceStatus.textContent = 'Continuous camera already running.';
+          return;
+        }
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        cameraPreview.srcObject = cameraStream;
+        faceStatus.textContent = 'Continuous webcam started. Detecting emotion every 3 seconds.';
+        captureFaceBtn.style.display = 'none';
+        startCameraBtn.disabled = true;
+        stopCameraBtn.disabled = false;
+        startCameraBtn.textContent = 'Camera Running';
+        cameraInterval = setInterval(captureFaceEmotion, 3000);
+      } catch (error) {
+        faceStatus.textContent = 'Unable to access webcam: ' + error.message;
+      }
+    }
+
+    function stopCamera() {
+      if (cameraInterval) {
+        clearInterval(cameraInterval);
+        cameraInterval = null;
+      }
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+        cameraPreview.srcObject = null;
+      }
+      startCameraBtn.disabled = false;
+      stopCameraBtn.disabled = true;
+      startCameraBtn.textContent = 'Start Camera';
+      faceStatus.textContent = 'Camera stopped. Start again to resume continuous face detection.';
+    }
+
+    async function captureFaceEmotion() {
+      if (!cameraStream) {
+        faceStatus.textContent = 'Start camera first.';
+        return;
+      }
+
+      async function captureBlob() {
+        if (window.ImageCapture) {
+          const tracks = cameraStream.getVideoTracks();
+          if (tracks.length > 0) {
+            const imageCapture = new ImageCapture(tracks[0]);
+            return imageCapture.takePhoto();
+          }
+        }
+
+        const video = cameraPreview;
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+      }
+
+      try {
+        const blob = await captureBlob();
+        const formData = new FormData();
+        formData.append('image', blob, 'face.jpg');
+
+        faceStatus.textContent = 'Analyzing face...';
+        const response = await fetch('/api/detect-face', {
+          method: 'POST',
+          body: formData,
+        });
+        const result = await response.json();
+        const emotion = (result.emotion || 'Neutral').toLowerCase();
+        sourceState.face = mapEmotion(emotion);
+        faceStatus.textContent = `📊 Face: ${result.emotion} (collecting for window)`;
+        updateFromSources('face');
+      } catch (error) {
+        faceStatus.textContent = 'Failed: ' + error.message;
+      }
+    }
+
+    function mapEmotion(value) {
+      const lower = String(value).toLowerCase();
+      if (lower.includes('happy') || lower.includes('surprise')) return 'happy';
+      if (lower.includes('sad')) return 'sad';
+      if (lower.includes('angry') || lower.includes('fear') || lower.includes('stress')) return 'stressed';
+      return 'focused';
+    }
+
+    async function startVoiceAnalyser(stream) {
+      if (!stream) return;
+      if (voiceAnalysisTimer) {
+        clearInterval(voiceAnalysisTimer);
+      }
+      if (!voiceAudioContext) {
+        voiceAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      await voiceAudioContext.resume();
+      const source = voiceAudioContext.createMediaStreamSource(stream);
+      voiceAnalyser = voiceAudioContext.createAnalyser();
+      voiceAnalyser.fftSize = 256;
+      source.connect(voiceAnalyser);
+
+      const dataArray = new Float32Array(voiceAnalyser.fftSize);
+      voiceAnalysisTimer = setInterval(() => {
+        voiceAnalyser.getFloatTimeDomainData(dataArray);
+        let maxAmp = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          maxAmp = Math.max(maxAmp, Math.abs(dataArray[i]));
+        }
+        voiceVolume = maxAmp;
+      }, 100);
+    }
+
+    async function stopVoiceAnalyser() {
+      if (voiceAnalysisTimer) {
+        clearInterval(voiceAnalysisTimer);
+        voiceAnalysisTimer = null;
+      }
+      if (voiceAnalyser) {
+        voiceAnalyser.disconnect();
+        voiceAnalyser = null;
+      }
+      if (voiceAudioContext) {
+        try {
+          await voiceAudioContext.close();
+        } catch (err) {
+          console.warn('Failed to close voice audio context', err);
+        }
+        voiceAudioContext = null;
+      }
+      voiceVolume = 0;
+    }
+
+    async function sendVoiceChunk(blob) {
+      if (!blob || blob.size < VOICE_MIN_BYTES) {
+        return;
+      }
+      if (voiceVolume < VOICE_SILENCE_THRESHOLD) {
+        return;
+      }
+
+      const extension = blob.type?.split('/')[1]?.split(';')[0] || 'webm';
+      const formData = new FormData();
+      formData.append('file', blob, `voice.${extension}`);
+      try {
+        const response = await fetch('/api/detect-voice', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.status === 204) {
+          return;
+        }
+
+        const text = await response.text();
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (_) {
+          result = { error: text || 'Invalid response format' };
+        }
+
+        if (response.ok && result.emotion) {
+          const emotion = mapEmotion(result.emotion);
+          sourceState.voice = emotion;
+          voiceStatus.textContent = `📊 Voice: ${result.emotion} (collecting for window)`;
+          updateFromSources('voice');
+        } else if (result.error && /Decoding failed|ffmpeg returned error code/i.test(result.error)) {
+          return;
+        } else {
+          voiceStatus.textContent = `Voice analysis error: ${result.error || response.statusText || 'unknown'}`;
+          console.error('Voice chunk error', response.status, result, text);
+        }
+      } catch (error) {
+        voiceStatus.textContent = 'Voice send failed: ' + error.message;
+      }
+    }
+
+    async function startVoiceRecording() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        voiceStatus.textContent = 'Microphone not supported.';
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        voiceStream = stream;
+        await startVoiceAnalyser(stream);
+        const options = {};
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          options.mimeType = 'audio/webm;codecs=opus';
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+          options.mimeType = 'audio/webm';
+        }
+        mediaRecorder = new MediaRecorder(stream, options);
+        mediaRecorder.ondataavailable = async event => {
+          if (event.data && event.data.size > 0) {
+            await sendVoiceChunk(event.data);
+          }
+        };
+        mediaRecorder.onstop = async () => {
+          if (voiceStream) {
+            voiceStream.getTracks().forEach(track => track.stop());
+            voiceStream = null;
+          }
+          await stopVoiceAnalyser();
+          voiceStatus.textContent = 'Voice recording stopped.';
+        };
+        mediaRecorder.start(2500);
+        voiceStatus.textContent = 'Recording voice continuously...';
+      } catch (error) {
+        voiceStatus.textContent = 'Failed: ' + error.message;
+      }
+    }
+
+    function stopVoiceRecording() {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      } else {
+        voiceStatus.textContent = 'Recording not active.';
+      }
+    }
+
+    function scheduleKeystrokeAnalysis() {
+      if (typingTimer) {
+        clearTimeout(typingTimer);
+      }
+      if (keystrokeHistory.length >= 3) {
+        typingTimer = setTimeout(() => analyzeKeystrokes('keystroke'), TYPING_DEBOUNCE_MS);
+      }
+    }
+
+    function addKeystrokeEvent(event) {
+      if (event.type === 'keydown') {
+        pendingDown[event.key] = performance.now();
+      }
+      if (event.type === 'keyup') {
+        const downTime = pendingDown[event.key] || performance.now();
+        const upTime = performance.now();
+        delete pendingDown[event.key];
+
+        keystrokeHistory.push({ down: downTime, up: upTime });
+        if (keystrokeHistory.length > 6) {
+          keystrokeHistory.shift();
+        }
+        scheduleKeystrokeAnalysis();
+      }
+    }
+
+    function computeKeystrokeFeatures() {
+      if (keystrokeHistory.length < 3) {
+        throw new Error('Type at least 3 keys to analyze.');
+      }
+      const events = keystrokeHistory.slice(-3);
+      const [prev2, prev1, current] = events;
+      return {
+        hold_time: current.up - current.down,
+        prev_hold_time: prev1.up - prev1.down,
+        down_to_down: current.down - prev1.down,
+        up_to_down: current.down - prev1.up,
+        up_to_up: current.up - prev1.up,
+        down_to_up_prev: current.up - prev1.down,
+        down_to_down2: current.down - prev2.down,
+        down_to_up2: current.up - prev2.down,
+      };
+    }
+
+    async function analyzeKeystrokes(origin = 'keystroke') {
+      try {
+        const features = computeKeystrokeFeatures();
+        keystrokeStatus.textContent = 'Analyzing...';
+        const response = await fetch('/api/detect-keystroke', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(features),
+        });
+        const result = await response.json();
+        const emotion = mapEmotion(result.emotion);
+        sourceState.keystroke = emotion;
+        keystrokeStatus.textContent = `📊 Keystroke: ${result.emotion} (collecting for window)`;
+        updateFromSources(origin);
+      } catch (error) {
+        keystrokeStatus.textContent = 'Failed: ' + error.message;
+      }
+    }
+
+    // manual control removed — detection drives emotion changes
+
+    startCameraBtn.addEventListener('click', startCamera);
+    stopCameraBtn.addEventListener('click', stopCamera);
+    captureFaceBtn.addEventListener('click', captureFaceEmotion);
+    window.addEventListener('beforeunload', stopCamera);
+    startRecordBtn.addEventListener('click', startVoiceRecording);
+    stopRecordBtn.addEventListener('click', stopVoiceRecording);
+    predictKeystrokeBtn.addEventListener('click', () => analyzeKeystrokes('keystroke'));
+    predictKeystrokeSidebarBtn.addEventListener('click', () => analyzeKeystrokes('keystroke'));
+    clearCodeBtn.addEventListener('click', () => {
+      codeEditor.value = '';
+      keystrokeHistory.length = 0;
+      keystrokeStatus.textContent = 'Waiting for typing...';
+    });
+
+    codeEditor.addEventListener('keydown', addKeystrokeEvent);
+    codeEditor.addEventListener('keyup', addKeystrokeEvent);
+
+    setEmotion('focused', 'initial');
+    
+    // Initialize the 5-second emotion analysis window
+    initializeEmotionWindow();
+  </script>
+</body>
+</html>
