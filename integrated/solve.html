@@ -467,7 +467,7 @@
     }
 
     .cheerful-overlay.calm .cheerful-quote {
-      color: #334155;
+      color: #0f172a;
     }
 
     .cheerful-text {
@@ -618,6 +618,17 @@
 
     body.calm-override .btn-primary {
       background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      color: #0f172a;
+    }
+
+    body.calm-override .hero-copy p,
+    body.calm-override .hero-card p,
+    body.calm-override .problem-card p,
+    body.calm-override .workspace-card p,
+    body.calm-override .source-field span,
+    body.calm-override .source-summary,
+    body.calm-override .note,
+    body.calm-override .footer {
       color: #0f172a;
     }
 
@@ -860,18 +871,15 @@
     const TYPING_DEBOUNCE_MS = 1200;
     const VOICE_SILENCE_THRESHOLD = 0.02;
     const VOICE_MIN_BYTES = 3000;
-    const WINDOW_DURATION = 5; // seconds
-    const CHEERFUL_HOLD_DURATION = 300; // 5 minutes in seconds
+    const WINDOW_DURATION        = 5;    // seconds — match server.py WINDOW_DURATION
+    const CHEERFUL_HOLD_DURATION = 300;  // seconds: 5-min lock prevents overlay spam
     let cheerfulHoldUntil = 0; // timestamp when cheerful hold expires
     
     // Window management
-    let windowCheckInterval = null;
+    let windowCheckInterval     = null;  // display updater (every 500ms)
+    let completionCheckInterval = null;  // window-done checker — must be cleared on restart
     let windowStartTime = Date.now();
     let windowActive = true;
-    // Hold management (display aggregated emotion for next WINDOW_DURATION seconds)
-    let holdActive = false;
-    let holdStartTime = 0;
-    let lastAggregatedEmotion = null;
 
     function getCombinedEmotion() {
       const counts = Object.values(sourceState).reduce((acc, value) => {
@@ -927,94 +935,68 @@
     }
     
     function updateWindowDisplay() {
-      // Update the window timer display
-      if (holdActive) {
-        const holdElapsed = Date.now() - holdStartTime;
-        const holdRemaining = Math.max(0, (WINDOW_DURATION * 1000 - holdElapsed) / 1000);
-        completionBar.style.width = '100%';
-        sourceStatus.textContent = `Holding aggregate (${lastAggregatedEmotion}) — ${holdRemaining.toFixed(1)}s remaining`;
-        return;
-      }
-
       const elapsed = (Date.now() - windowStartTime) / 1000;
       const remaining = Math.max(0, WINDOW_DURATION - elapsed);
       const progress = Math.min(elapsed / WINDOW_DURATION, 1.0);
-
-      // Update completion bar to show window progress
       completionBar.style.width = (progress * 100) + '%';
-
-      // Update source summary to show time remaining
-      sourceStatus.textContent = `Window: ${remaining.toFixed(1)}s remaining`;
+      sourceStatus.textContent = `Collecting: ${remaining.toFixed(1)}s remaining`;
     }
     
     function startWindowTimer() {
-      // Start the 5-second window analysis
-      if (windowCheckInterval) {
-        clearInterval(windowCheckInterval);
-      }
-      
-      // Update display every 500ms
+      // Clear any previously running intervals before starting fresh
+      if (windowCheckInterval)     { clearInterval(windowCheckInterval);     windowCheckInterval = null; }
+      if (completionCheckInterval) { clearInterval(completionCheckInterval); completionCheckInterval = null; }
+
       windowCheckInterval = setInterval(updateWindowDisplay, 500);
-      
-      // Check window completion every second
-      const completionCheckInterval = setInterval(async () => {
+
+      // Check every 200ms so window fires within 200ms of true end (was 1000ms = up to 1s late)
+      completionCheckInterval = setInterval(async () => {
         const elapsed = (Date.now() - windowStartTime) / 1000;
-        
         if (elapsed >= WINDOW_DURATION) {
           clearInterval(completionCheckInterval);
+          completionCheckInterval = null;
           await completeEmotionWindow();
         }
-      }, 1000);
+      }, 200);
     }
     
     async function completeEmotionWindow() {
-      // Complete the current window and apply the weighted emotion
       windowActive = false;
-      
-      // Get the final weighted emotion from server
+
       const emotionData = await getWeightedEmotion();
-      
-      if (emotionData && emotionData.emotion) {
-        const finalEmotion = emotionData.emotion.toLowerCase();
-
-        // By default update UI with final emotion
-        setEmotion(finalEmotion, 'automated analysis');
-
-        // Show completion status and HOLD the aggregated emotion for the next WINDOW_DURATION seconds
-        lastAggregatedEmotion = finalEmotion;
-        holdActive = true;
-        holdStartTime = Date.now();
-        sourceStatus.textContent = `✓ Window complete: ${finalEmotion} (confidence: ${(emotionData.confidence * 100).toFixed(0)}%) — holding for ${WINDOW_DURATION}s`;
-
-        // If the aggregated result is sad or stressed, show cheerful presentation (but continue background analysis)
-        if (finalEmotion === 'sad' || finalEmotion === 'stressed') {
-          // Only apply an override if not in a 5-minute hold period
-          if (Date.now() > cheerfulHoldUntil) {
-            if (finalEmotion === 'sad') {
-              document.body.classList.add('cheerful-override');
-            } else {
-              document.body.classList.add('calm-override');
-            }
-            setEmotion(finalEmotion, `automated analysis (${finalEmotion} override)`);
-            showCheerfulOverlay(finalEmotion);
-            
-            // Set hold period - during this time, don't show override again even if sad/stressed
-            cheerfulHoldUntil = Date.now() + (CHEERFUL_HOLD_DURATION * 1000);
-          }
-        }
-
-        // After WINDOW_DURATION, start the next window (background analysis continues)
-        setTimeout(() => {
-          holdActive = false;
-          // Remove any mood overlay after 5 minutes total
-          if (Date.now() > cheerfulHoldUntil) {
-            hideCheerfulOverlay();
-            document.body.classList.remove('cheerful-override');
-            document.body.classList.remove('calm-override');
-          }
-          initializeEmotionWindow();
-        }, WINDOW_DURATION * 1000);
+      if (!emotionData || !emotionData.emotion) {
+        // No data this window — start next immediately
+        initializeEmotionWindow();
+        return;
       }
+
+      const finalEmotion = emotionData.emotion.toLowerCase();
+
+      // Apply sad/stressed override BEFORE setEmotion so CSS wins from first paint
+      if (finalEmotion === 'sad' || finalEmotion === 'stressed') {
+        if (Date.now() > cheerfulHoldUntil) {
+          document.body.classList.add(finalEmotion === 'sad' ? 'cheerful-override' : 'calm-override');
+          showCheerfulOverlay(finalEmotion);
+          cheerfulHoldUntil = Date.now() + (CHEERFUL_HOLD_DURATION * 1000);
+        }
+      } else {
+        // Non-sad/stressed: remove overrides if 5-min lock has expired
+        if (Date.now() > cheerfulHoldUntil) {
+          hideCheerfulOverlay();
+          document.body.classList.remove('cheerful-override', 'calm-override');
+        }
+      }
+
+      // Build ranked summary for status text
+      let summary = '';
+      if (emotionData.ranked && emotionData.ranked.length > 0) {
+        summary = ' · ' + emotionData.ranked.slice(0, 3)
+          .map(r => `${r.emotion} ${(r.probability * 100).toFixed(0)}%`).join(' · ');
+      }
+      setEmotion(finalEmotion, `conf: ${(emotionData.confidence * 100).toFixed(0)}%${summary}`);
+
+      // No hold — start next window immediately (Bayesian prior handles continuity)
+      initializeEmotionWindow();
     }
 
     function setEmotion(emotion, source = 'manual') {
@@ -1082,7 +1064,7 @@
 
       const heading = originalEmotion === 'stressed'
         ? 'Take a calm moment' 
-        : "Here's something to lift your mood";
+        : "Lift your mood";
 
       text.innerHTML = `<div>${heading}</div><div class="cheerful-quote">${messages[0]}</div>`;
 
@@ -1149,7 +1131,7 @@
         startCameraBtn.disabled = true;
         stopCameraBtn.disabled = false;
         startCameraBtn.textContent = 'Camera Running';
-        cameraInterval = setInterval(captureFaceEmotion, 3000);
+        cameraInterval = setInterval(captureFaceEmotion, 2000);  // 2s: gives 2-3 readings per 5s window
       } catch (error) {
         faceStatus.textContent = 'Unable to access webcam: ' + error.message;
       }

@@ -1,0 +1,119 @@
+Step 1 — Normalization (normalize_emotion)
+Before anything is calculated, raw labels are cleaned up.
+face service returns:  "angry"   → normalize → "stressed"
+voice service returns: "fear"    → normalize → "stressed"  
+keystroke returns:     "focused" → normalize → "focused"
+Why: the similarity matrix only knows 5 canonical emotions. An unknown label like "angry" would score 0.0 against everything and silently vanish. Normalization ensures every reading participates.
+
+Step 2 — Recency Decay (recency_weight)
+Not all readings are equal — a reading from 0.5 seconds ago is more relevant than one from 4.5 seconds ago within the same 5-second window.
+pythonweight = 2^(-(age / half_life))
+With half_life = 8 seconds:
+age 0s  → weight 1.00   (fresh, full contribution)
+age 4s  → weight 0.71   (70% contribution)
+age 8s  → weight 0.50   (half contribution)
+age 16s → weight 0.25   (quarter contribution)
+Why exponential decay specifically: it matches how emotional state actually works — the most recent signal is most informative, but older signals don't suddenly become worthless, they just matter less gradually.
+
+Step 3 — Soft Similarity Voting (build_source_distribution)
+This is the key insight that replaces numeric averaging.
+Each reading doesn't just vote for its own emotion — it spreads votes across all 5 emotions based on semantic similarity. So "stressed" also partially votes for "sad" because those emotions are related.
+The similarity matrix (hand-designed):
+                happy  focused  neutral  stressed  sad
+stressed →      0.10    0.30     0.35     1.00    0.45
+So one stressed reading with confidence 0.85, recency weight 1.0:
+vote_weight = recency(1.0) × confidence(0.85) = 0.85
+
+votes distributed:
+  happy    += 0.85 × 0.10 = 0.085
+  focused  += 0.85 × 0.30 = 0.255
+  neutral  += 0.85 × 0.35 = 0.298
+  stressed += 0.85 × 1.00 = 0.850   ← dominant
+  sad      += 0.85 × 0.45 = 0.383
+After normalizing (divide by sum), this single reading produces a distribution:
+stressed: 0.45,  sad: 0.20,  neutral: 0.16,  focused: 0.13,  happy: 0.04
+Why soft voting: it makes the system degrade gracefully. If face says stressed and voice says sad, the result isn't a confused flip-flop — it lands somewhere meaningful (stressed-leaning) because both emotions share similarity weight.
+
+Step 4 — Per-Source Distribution
+Now imagine the face camera fired 3 times in the 5-second window:
+t=0.5s: "stressed", conf=0.85  → recency=0.96
+t=2.0s: "stressed", conf=0.80  → recency=0.86  
+t=4.0s: "neutral",  conf=0.70  → recency=0.74
+Each reading's vote_weight = recency × confidence:
+reading 1: 0.96 × 0.85 = 0.816
+reading 2: 0.86 × 0.80 = 0.688
+reading 3: 0.74 × 0.70 = 0.518
+The two stressed readings outweigh the one neutral. After all votes are summed and normalized, face's distribution might look like:
+face → { stressed: 0.52, neutral: 0.22, sad: 0.14, focused: 0.09, happy: 0.03 }
+
+Step 5 — Cross-Source Fusion (Base Weights)
+Now you have three separate distributions — one per source. Fuse them using reliability weights:
+face:      0.50  →  { stressed:0.52, neutral:0.22, sad:0.14, focused:0.09, happy:0.03 }
+keystroke: 0.30  →  { focused:0.55,  neutral:0.25, stressed:0.12, sad:0.05, happy:0.03 }
+voice:     0.20  →  { stressed:0.48, sad:0.22, neutral:0.18, focused:0.09, happy:0.03 }
+Fused score for each emotion = sum of (source_weight × source_probability):
+stressed: (0.50×0.52) + (0.30×0.12) + (0.20×0.48) = 0.260 + 0.036 + 0.096 = 0.392
+focused:  (0.50×0.09) + (0.30×0.55) + (0.20×0.09) = 0.045 + 0.165 + 0.018 = 0.228
+neutral:  (0.50×0.22) + (0.30×0.25) + (0.20×0.18) = 0.110 + 0.075 + 0.036 = 0.221
+sad:      (0.50×0.14) + (0.30×0.05) + (0.20×0.22) = 0.070 + 0.015 + 0.044 = 0.129
+happy:    (0.50×0.03) + (0.30×0.03) + (0.20×0.03) = 0.015 + 0.009 + 0.006 = 0.030
+After normalizing (divide by total 1.0):
+fused = { stressed:0.392, focused:0.228, neutral:0.221, sad:0.129, happy:0.030 }
+Stressed leads despite keystroke disagreeing — because face (50%) and voice (20%) both point stressed, outweighing keystroke (30%) pointing focused.
+
+Step 6 — Bayesian Prior (Temporal Continuity)
+This is the memory of the system. After each 5-second window, the result is stored as the prior for the next window. The prior represents: "before seeing new data, what do we already believe?"
+pythonblended[e] = (1 - PRIOR_STRENGTH) × fused[e] + PRIOR_STRENGTH × prior[e]
+With PRIOR_STRENGTH = 0.25:
+Suppose the previous window concluded stressed with high confidence, so prior is:
+prior = { stressed:0.70, focused:0.15, neutral:0.10, sad:0.04, happy:0.01 }
+Blending:
+stressed: 0.75×0.392 + 0.25×0.70 = 0.294 + 0.175 = 0.469
+focused:  0.75×0.228 + 0.25×0.15 = 0.171 + 0.038 = 0.209
+neutral:  0.75×0.221 + 0.25×0.10 = 0.166 + 0.025 = 0.191
+sad:      0.75×0.129 + 0.25×0.04 = 0.097 + 0.010 = 0.107
+happy:    0.75×0.030 + 0.25×0.01 = 0.023 + 0.003 = 0.026
+After normalizing:
+posterior = { stressed:0.466, focused:0.208, neutral:0.190, sad:0.106, happy:0.026 }
+Why this matters: without the prior, a single calm window (say the user stopped typing for 5 seconds) would instantly flip the UI from stressed to neutral. With the prior carrying 25% of the previous belief, one quiet window only nudges the state — it takes consistent calm readings to actually transition away from stressed.
+
+Step 7 — Winner + Confidence (Entropy)
+Winner: argmax of posterior → stressed (0.466) ✓
+Confidence uses Shannon entropy — a measure of how spread out the distribution is:
+H = -Σ p × log(p)
+A perfectly certain distribution {stressed:1.0, rest:0.0} → H = 0 → confidence = 1.0
+A perfectly uncertain distribution (all equal at 0.2) → H = H_max → confidence = 0.0
+pythonconfidence = 1 - H / H_max
+For our posterior: stressed leads at 46.6% but others aren't negligible → moderate confidence ~0.55. That gets shown in the UI: "stressed (conf: 55%)".
+
+Step 8 — UI Response
+completeEmotionWindow() receives { emotion: "stressed", confidence: 0.55, ranked: [...] }:
+calm-override CSS class added to body   → sky blue palette everywhere
+setEmotion('stressed')                  → emotion-stressed class + status pill
+showCheerfulOverlay('stressed')         → 🌿 "Take a calm breath" bottom-right card
+cheerfulHoldUntil = now + 5 minutes    → won't re-trigger for 5 min
+
+The Full Pipeline as a Diagram
+Raw sensor outputs
+    │
+    ▼
+normalize_emotion()          angry/fear/disgust → "stressed"
+    │
+    ▼
+recency_weight()             fresh readings count more (half-life 8s)
+    │
+    ▼
+build_source_distribution()  soft similarity voting → probability dist per source
+    │
+    ▼
+cross-source fusion           face×0.5 + keystroke×0.3 + voice×0.2
+    │
+    ▼
+Bayesian blending             75% new data + 25% previous window's belief
+    │
+    ▼
+argmax + entropy confidence   pick winner, measure certainty
+    │
+    ▼
+UI response                   calm blue + 🌿 overlay if stressed
+Every step exists to solve a specific real problem — normalization fixes unknown labels, recency decay fixes stale readings, soft voting fixes nonsense averages, cross-source weights handle reliability differences, the prior prevents jitter, entropy gives honest confidence. Remove any one step and a specific failure mode comes back.
