@@ -868,7 +868,7 @@
     const keystrokeHistory = [];
     const pendingDown = {};
     let typingTimer = null;
-    const TYPING_DEBOUNCE_MS = 1200;
+    const TYPING_DEBOUNCE_MS = 500;  // Reduced for more responsive automatic analysis
     const VOICE_SILENCE_THRESHOLD = 0.02;
     const VOICE_MIN_BYTES = 3000;
     const WINDOW_DURATION        = 5;    // seconds — match server.py WINDOW_DURATION
@@ -963,6 +963,12 @@
     async function completeEmotionWindow() {
       windowActive = false;
 
+      // Stop updating the display so the result text stays visible
+      if (windowCheckInterval) {
+        clearInterval(windowCheckInterval);
+        windowCheckInterval = null;
+      }
+
       const emotionData = await getWeightedEmotion();
       if (!emotionData || !emotionData.emotion) {
         // No data this window — start next immediately
@@ -995,8 +1001,10 @@
       }
       setEmotion(finalEmotion, `conf: ${(emotionData.confidence * 100).toFixed(0)}%${summary}`);
 
-      // No hold — start next window immediately (Bayesian prior handles continuity)
-      initializeEmotionWindow();
+      // Keep showing result for 5 seconds before starting next window
+      setTimeout(() => {
+        initializeEmotionWindow();
+      }, 5000);
     }
 
     function setEmotion(emotion, source = 'manual') {
@@ -1369,16 +1377,63 @@
         throw new Error('Type at least 3 keys to analyze.');
       }
       const events = keystrokeHistory.slice(-3);
-      const [prev2, prev1, current] = events;
+
+      // Build per-event interval values
+      const rows = events.map((e, i) => {
+        const prev = i > 0 ? events[i - 1] : null;
+        return {
+          hold_time: e.up - e.down,
+          down_to_down: prev ? e.down - prev.down : 0,
+          up_to_down: prev ? e.down - prev.up : 0,
+          up_to_up: prev ? e.up - prev.up : 0,
+          down_to_up_prev: prev ? e.up - prev.down : 0,
+        };
+      });
+
+      function mean(arr) {
+        if (!arr.length) return 0;
+        return arr.reduce((a, b) => a + b, 0) / arr.length;
+      }
+      function std(arr) {
+        if (!arr.length) return 0;
+        const m = mean(arr);
+        return Math.sqrt(arr.reduce((s, v) => s + (v - m) * (v - m), 0) / arr.length);
+      }
+      function median(arr) {
+        if (!arr.length) return 0;
+        const s = arr.slice().sort((a, b) => a - b);
+        const mid = Math.floor(s.length / 2);
+        return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+      }
+
+      const hold_vals = rows.map(r => r.hold_time);
+      const d2d_vals = rows.map(r => r.down_to_down);
+      const u2d_vals = rows.map(r => r.up_to_down);
+      const u2u_vals = rows.map(r => r.up_to_up);
+      const d2up_vals = rows.map(r => r.down_to_up_prev);
+
       return {
-        hold_time: current.up - current.down,
-        prev_hold_time: prev1.up - prev1.down,
-        down_to_down: current.down - prev1.down,
-        up_to_down: current.down - prev1.up,
-        up_to_up: current.up - prev1.up,
-        down_to_up_prev: current.up - prev1.down,
-        down_to_down2: current.down - prev2.down,
-        down_to_up2: current.up - prev2.down,
+        hold_time_mean: mean(hold_vals),
+        hold_time_std: std(hold_vals),
+        hold_time_median: median(hold_vals),
+
+        down_to_down_mean: mean(d2d_vals),
+        down_to_down_std: std(d2d_vals),
+        down_to_down_median: median(d2d_vals),
+
+        up_to_down_mean: mean(u2d_vals),
+        up_to_down_std: std(u2d_vals),
+        up_to_down_median: median(u2d_vals),
+
+        up_to_up_mean: mean(u2u_vals),
+        up_to_up_std: std(u2u_vals),
+        up_to_up_median: median(u2u_vals),
+
+        down_to_up_prev_mean: mean(d2up_vals),
+        down_to_up_prev_std: std(d2up_vals),
+        down_to_up_prev_median: median(d2up_vals),
+
+        window_size: events.length,
       };
     }
 
@@ -1394,7 +1449,7 @@
         const result = await response.json();
         const emotion = mapEmotion(result.emotion);
         sourceState.keystroke = emotion;
-        keystrokeStatus.textContent = `📊 Keystroke: ${result.emotion} (collecting for window)`;
+        keystrokeStatus.textContent = `✅ Keystroke: ${result.emotion}`;
         updateFromSources(origin);
       } catch (error) {
         keystrokeStatus.textContent = 'Failed: ' + error.message;

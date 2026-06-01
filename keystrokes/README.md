@@ -23,8 +23,17 @@ pip install -r keystrokes/requirements.txt
 
 2. Train the model (this uses `datasets/Fixed Text Typing Dataset.csv` and `Free Text Typing Dataset.csv`):
 
+Option A: from the repository root
+
 ```bash
 python -m keystrokes.train
+```
+
+Option B: from the `keystrokes/` folder
+
+```bash
+cd keystrokes
+python train.py
 ```
 
 3. Run the server and open the demo in a browser:
@@ -35,5 +44,6 @@ python -m keystrokes.server
 ```
 
 Notes:
-- Label mapping is heuristic: `A->Angry, H->Happy, S->Surprise, N/C->Neutral` and unknown codes map to Neutral.
-- The feature set is intentionally small (per-row timing columns) so it runs quickly. You can extend `features.py`.
+- Label mapping is now broader to reduce overfitting: `A/D/F->Negative`, `H/S->Positive`, `N/C->Neutral`.
+- Training uses rolling-window aggregates over 10-20 keystrokes rather than only the last 3 keypresses.
+- The model is split using user-aware group validation to avoid leakage between users.

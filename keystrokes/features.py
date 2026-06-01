@@ -1,104 +1,260 @@
+"""Keystroke feature extraction — rolling-window statistics.
+
+Two public entry points:
+
+    extract_features(df, window_size, min_keystrokes)
+        Batch mode: operates on a full DataFrame (output of data_loader.load_all).
+        Returns a DataFrame of window-level features **plus** ``emotionIndex``
+        and ``userId`` columns so train.py can extract labels/groups without
+        fragile index re-alignment.
+
+    extract_live_features(history, window_size, min_keystrokes)
+        Real-time mode: operates on a list of keystroke namedtuple/objects from
+        a live session.  Returns a plain dict matching FEATURE_COLS.
+"""
 import numpy as np
 import pandas as pd
 
+# Raw per-keystroke timing columns used as input signals.
+EVENT_FEATURE_COLS = [
+    "hold_time",        # D1U1  — how long the key was held
+    "down_to_down",     # D1D2  — inter-keypress interval
+    "up_to_down",       # U1D2  — flight time between keys
+    "up_to_up",         # U1U2  — release-to-release interval
+    "down_to_up_prev",  # D1U2  — overlap / gap across key boundary
+]
+
+# Output feature column names (used by both batch and live paths).
 FEATURE_COLS = [
-    "hold_time",
-    "prev_hold_time",
-    "down_to_down",
-    "up_to_down",
-    "up_to_up",
-    "down_to_up_prev",
-    "down_to_down2",
-    "down_to_up2",
+    "hold_time_mean",        "hold_time_std",        "hold_time_median",
+    "down_to_down_mean",     "down_to_down_std",     "down_to_down_median",
+    "up_to_down_mean",       "up_to_down_std",       "up_to_down_median",
+    "up_to_up_mean",         "up_to_up_std",         "up_to_up_median",
+    "down_to_up_prev_mean",  "down_to_up_prev_std",  "down_to_up_prev_median",
+    "window_size",
 ]
 
 
-def extract_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Create keystroke timing features for model training and live prediction.
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
 
-    The features are computed from absolute keyDown/keyUp timestamps and use
-    a short history window of the previous two key presses.
+def _to_float(series: pd.Series) -> pd.Series:
+    return pd.to_numeric(series, errors="coerce").astype(float)
+
+
+def _ensure_numeric(df: pd.DataFrame, cols) -> None:
+    for col in cols:
+        if col in df.columns:
+            df[col] = _to_float(df[col])
+
+
+def _build_event_frame(df: pd.DataFrame) -> pd.DataFrame:
+    """Convert raw keystroke columns into per-event timing signals.
+
+    Supports two data layouts:
+      1. Pre-computed digraph columns (D1U1, D1D2, …) — preferred.
+      2. Raw keyDown / keyUp timestamps — computes digraphs on the fly.
     """
-    out = pd.DataFrame()
+    delta_cols = ["D1U1", "D1D2", "U1D2", "U1U2", "D1U2"]
+    has_delta = all(c in df.columns for c in delta_cols)
 
-    df = df.copy()
-    if "index" in df.columns:
-        df["index"] = pd.to_numeric(df["index"], errors="coerce")
-
-    # sort rows to ensure timeline order per user if possible
-    if "userId" in df.columns:
-        df["userId"] = df["userId"].astype(str)
-        df = df.sort_values(["userId", "index"]).reset_index(drop=True)
-    elif "index" in df.columns:
-        df = df.sort_values("index").reset_index(drop=True)
-    else:
-        df = df.reset_index(drop=True)
-
-    if "keyDown" in df.columns and "keyUp" in df.columns:
-        df["keyDown"] = df["keyDown"].astype(float)
-        df["keyUp"] = df["keyUp"].astype(float)
-        raw_hold = (df["keyUp"] - df["keyDown"]).abs().sum()
-    else:
-        raw_hold = 0.0
-
-    delta_cols = ["D1U1", "D1D2", "U1D2", "U1U2", "D1U2", "D1U3", "D1D3"]
-    has_delta_cols = all(col in df.columns for col in delta_cols)
-
-    if has_delta_cols:
+    if has_delta:
+        _ensure_numeric(df, delta_cols)
+        # Clamp implausible values (e.g. negative timestamps stored as large ints).
         for col in delta_cols:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
             df.loc[df[col].abs() > 1e9, col] = np.nan
 
-        # Dataset provides timing deltas directly; use shifted deltas to match live feature semantics.
-        out["hold_time"] = df["D1U1"].astype(float)
-        out["prev_hold_time"] = df.groupby("userId")["D1U1"].shift(1).fillna(0.0) if "userId" in df.columns else df["D1U1"].shift(1).fillna(0.0)
-        out["down_to_down"] = df.groupby("userId")["D1D2"].shift(1).fillna(0.0) if "userId" in df.columns else df["D1D2"].shift(1).fillna(0.0)
-        out["up_to_down"] = df.groupby("userId")["U1D2"].shift(1).fillna(0.0) if "userId" in df.columns else df["U1D2"].shift(1).fillna(0.0)
-        out["up_to_up"] = df.groupby("userId")["U1U2"].shift(1).fillna(0.0) if "userId" in df.columns else df["U1U2"].shift(1).fillna(0.0)
-        out["down_to_up_prev"] = df.groupby("userId")["D1U2"].shift(1).fillna(0.0) if "userId" in df.columns else df["D1U2"].shift(1).fillna(0.0)
-        out["down_to_down2"] = df.groupby("userId")["D1D3"].shift(2).fillna(0.0) if "userId" in df.columns else df["D1D3"].shift(2).fillna(0.0)
-        out["down_to_up2"] = df.groupby("userId")["D1U3"].shift(2).fillna(0.0) if "userId" in df.columns else df["D1U3"].shift(2).fillna(0.0)
-    elif raw_hold > 0:
-        # Dataset contains absolute key timestamps; use them when valid.
-        df["prev_keyDown"] = df.groupby("userId")["keyDown"].shift(1) if "userId" in df.columns else df["keyDown"].shift(1)
-        df["prev_keyUp"] = df.groupby("userId")["keyUp"].shift(1) if "userId" in df.columns else df["keyUp"].shift(1)
-        df["prev2_keyDown"] = df.groupby("userId")["keyDown"].shift(2) if "userId" in df.columns else df["keyDown"].shift(2)
+        event = pd.DataFrame(
+            {
+                "hold_time":       df["D1U1"],
+                "down_to_down":    df["D1D2"],
+                "up_to_down":      df["U1D2"],
+                "up_to_up":        df["U1U2"],
+                "down_to_up_prev": df["D1U2"],
+            },
+            index=df.index,
+        )
 
-        out["hold_time"] = df["keyUp"] - df["keyDown"]
-        out["prev_hold_time"] = (df["prev_keyUp"] - df["prev_keyDown"]).fillna(0.0)
-        out["down_to_down"] = (df["keyDown"] - df["prev_keyDown"]).fillna(0.0)
-        out["up_to_down"] = (df["keyDown"] - df["prev_keyUp"]).fillna(0.0)
-        out["up_to_up"] = (df["keyUp"] - df["prev_keyUp"]).fillna(0.0)
-        out["down_to_up_prev"] = (df["keyUp"] - df["prev_keyDown"]).fillna(0.0)
-        out["down_to_down2"] = (df["keyDown"] - df["prev2_keyDown"]).fillna(0.0)
-        out["down_to_up2"] = (df["keyUp"] - df["prev2_keyDown"]).fillna(0.0)
+    elif "keyDown" in df.columns and "keyUp" in df.columns:
+        df["keyDown"] = _to_float(df["keyDown"])
+        df["keyUp"]   = _to_float(df["keyUp"])
+
+        group_col = df["userId"] if "userId" in df.columns else None
+        if group_col is not None:
+            prev_down = df.groupby("userId")["keyDown"].shift(1)
+            prev_up   = df.groupby("userId")["keyUp"].shift(1)
+        else:
+            prev_down = df["keyDown"].shift(1)
+            prev_up   = df["keyUp"].shift(1)
+
+        event = pd.DataFrame(
+            {
+                "hold_time":       df["keyUp"] - df["keyDown"],
+                "down_to_down":    (df["keyDown"] - prev_down).fillna(0.0),
+                "up_to_down":      (df["keyDown"] - prev_up).fillna(0.0),
+                "up_to_up":        (df["keyUp"]   - prev_up).fillna(0.0),
+                "down_to_up_prev": (df["keyUp"]   - prev_down).fillna(0.0),
+            },
+            index=df.index,
+        )
+
     else:
-        raise ValueError("DataFrame does not contain usable timing columns for feature extraction")
+        raise ValueError(
+            "DataFrame must contain either pre-computed digraph columns "
+            "(D1U1, D1D2, U1D2, U1U2, D1U2) or raw keyDown/keyUp timestamps."
+        )
 
-    out = out.replace([np.inf, -np.inf], np.nan).fillna(0.0)
-    return out
+    if "userId" in df.columns:
+        event["userId"] = df["userId"]
+    if "emotionIndex" in df.columns:
+        event["emotionIndex"] = df["emotionIndex"]
+
+    return event
 
 
-def extract_live_features(history):
-    """Compute the same feature set from a live keystroke history list."""
-    if len(history) < 3:
-        raise ValueError("At least 3 events are required to compute live features")
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
 
-    current = history[-1]
-    prev1 = history[-2]
-    prev2 = history[-3]
+def extract_features(
+    df: pd.DataFrame,
+    window_size: int = 15,
+    min_keystrokes: int = 10,
+) -> pd.DataFrame:
+    """Extract rolling-window statistics from a full keystroke DataFrame.
 
-    return {
-        "hold_time": current.up - current.down,
-        "prev_hold_time": prev1.up - prev1.down,
-        "down_to_down": current.down - prev1.down,
-        "up_to_down": current.down - prev1.up,
-        "up_to_up": current.up - prev1.up,
-        "down_to_up_prev": current.up - prev1.down,
-        "down_to_down2": current.down - prev2.down,
-        "down_to_up2": current.up - prev2.down,
-    }
+    For each user, a rolling window of ``window_size`` keystrokes is slid
+    over the sequence.  Mean, std, and median of each timing signal are
+    computed per window, giving 16 features total (5 signals × 3 stats + 1
+    window-size column).
+
+    The returned DataFrame also carries ``emotionIndex`` and ``userId``
+    columns (taken from the last keystroke in each window) so that
+    train.py can extract labels and group assignments without having to
+    re-align indices.
+
+    Args:
+        df:              Full keystroke DataFrame from data_loader.load_all().
+        window_size:     Rolling window length in keystrokes.  Default 15.
+                         Values below ~10 make std/median unreliable.
+        min_keystrokes:  Minimum keystrokes per user before any windows are
+                         produced for that user.  Also the ``min_periods``
+                         argument for the rolling aggregation.
+
+    Returns:
+        DataFrame with columns = FEATURE_COLS + [emotionIndex, userId].
+
+    Raises:
+        ValueError: if no valid windows could be produced.
+    """
+    df = df.copy()
+    df["userId"] = df["userId"].astype(str) if "userId" in df.columns else "unknown"
+
+    if "userId" in df.columns:
+        df = df.sort_values(["userId", "index"]).reset_index(drop=True)
+    else:
+        df = df.sort_values("index").reset_index(drop=True)
+
+    events = _build_event_frame(df)
+
+    groups = (
+        events.groupby("userId")
+        if "userId" in events.columns
+        else [(None, events)]
+    )
+
+    windows = []
+    for _, group in groups:
+        if len(group) < min_keystrokes:
+            continue
+
+        timing = group[EVENT_FEATURE_COLS]
+        rolling = timing.rolling(window=window_size, min_periods=min_keystrokes)
+        agg = rolling.agg(["mean", "std", "median"])
+        agg.columns = [f"{col}_{stat}" for col, stat in agg.columns]
+        agg["window_size"] = rolling.count()["hold_time"].astype(float)
+        agg = agg.dropna()
+
+        # Carry the label and group identifier from the last keystroke in
+        # each window (the index already points there after rolling).
+        if "emotionIndex" in group.columns:
+            agg["emotionIndex"] = group.loc[agg.index, "emotionIndex"]
+        if "userId" in group.columns:
+            agg["userId"] = group.loc[agg.index, "userId"]
+
+        windows.append(agg)
+
+    if not windows:
+        raise ValueError(
+            "No valid windows found. Need at least %d keystrokes per user." % min_keystrokes
+        )
+
+    result = (
+        pd.concat(windows)
+        .replace([np.inf, -np.inf], np.nan)
+        .dropna(subset=FEATURE_COLS)  # only drop rows where features are NaN
+    )
+    return result
+
+
+def extract_live_features(
+    history,
+    window_size: int = 15,
+    min_keystrokes: int = 10,
+) -> dict:
+    """Compute aggregated window features from a live keystroke buffer.
+
+    Intended for real-time inference inside the UI pipeline.  Each element
+    of ``history`` must expose ``.down`` and ``.up`` attributes (timestamps
+    in any consistent unit — milliseconds recommended).
+
+    Args:
+        history:         List of keystroke objects with .down and .up fields.
+        window_size:     Maximum number of recent keystrokes to use.
+        min_keystrokes:  Minimum buffer length before features can be computed.
+
+    Returns:
+        Dict mapping FEATURE_COLS names to float values.
+
+    Raises:
+        ValueError: if the buffer is too short.
+    """
+    if len(history) < min_keystrokes:
+        raise ValueError(
+            "Need at least %d keystrokes for live features, got %d."
+            % (min_keystrokes, len(history))
+        )
+
+    recent = history[-window_size:]
+    rows = []
+    for i in range(1, len(recent)):
+        prev    = recent[i - 1]
+        current = recent[i]
+        rows.append(
+            {
+                "hold_time":       current.up   - current.down,
+                "down_to_down":    current.down - prev.down,
+                "up_to_down":      current.down - prev.up,
+                "up_to_up":        current.up   - prev.up,
+                "down_to_up_prev": current.up   - prev.down,
+            }
+        )
+
+    if not rows:
+        raise ValueError("Not enough interval-level keystrokes to compute live features.")
+
+    df_hist = pd.DataFrame(rows)
+    stats = {}
+    for col in EVENT_FEATURE_COLS:
+        values = df_hist[col].astype(float)
+        stats[f"{col}_mean"]   = float(values.mean())
+        stats[f"{col}_std"]    = float(values.std(ddof=0))
+        stats[f"{col}_median"] = float(values.median())
+
+    stats["window_size"] = float(len(recent))
+    return stats
 
 
 if __name__ == "__main__":
-    print("Feature module: FEATURE_COLS=", FEATURE_COLS)
+    print("FEATURE_COLS:", FEATURE_COLS)

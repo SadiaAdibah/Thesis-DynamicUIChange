@@ -7,7 +7,7 @@
   </head>
   <body>
     <h3>Keystroke Emotion Demo</h3>
-    <p>Type in the box below. Predictions for the last keystroke are shown.</p>
+    <p>Type in the box below. Predictions are based on the last 10-20 keystrokes.</p>
     <textarea id="input"></textarea>
     <div id="out"></div>
 
@@ -16,23 +16,68 @@
       const out = document.getElementById('out');
       const pendingDown = {};
       const history = [];
+      const maxHistory = 20;
+      const minKeystrokes = 10;
 
       function clampHistory() {
-        while (history.length > 3) history.shift();
+        while (history.length > maxHistory) history.shift();
+      }
+
+      function mean(values) {
+        return values.reduce((sum, value) => sum + value, 0) / values.length;
+      }
+
+      function std(values) {
+        const avg = mean(values);
+        return Math.sqrt(values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / values.length);
+      }
+
+      function median(values) {
+        const sorted = [...values].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 === 0
+          ? (sorted[mid - 1] + sorted[mid]) / 2
+          : sorted[mid];
       }
 
       function computeFeatures(events) {
-        const [e1, e2, e3] = events;
-        return {
-          hold_time: e3.up - e3.down,
-          prev_hold_time: e2.up - e2.down,
-          down_to_down: e3.down - e2.down,
-          up_to_down: e3.down - e2.up,
-          up_to_up: e3.up - e2.up,
-          down_to_up_prev: e3.up - e2.down,
-          down_to_down2: e3.down - e1.down,
-          down_to_up2: e3.up - e1.down,
+        if (events.length < minKeystrokes) {
+          return null;
+        }
+
+        const rows = [];
+        for (let i = 1; i < events.length; i += 1) {
+          const prev = events[i - 1];
+          const current = events[i];
+          rows.push({
+            hold_time: current.up - current.down,
+            down_to_down: current.down - prev.down,
+            up_to_down: current.down - prev.up,
+            up_to_up: current.up - prev.up,
+            down_to_up_prev: current.up - prev.down,
+          });
+        }
+
+        const values = {
+          hold_time: [],
+          down_to_down: [],
+          up_to_down: [],
+          up_to_up: [],
+          down_to_up_prev: [],
         };
+
+        rows.forEach((row) => {
+          Object.keys(values).forEach((key) => values[key].push(row[key]));
+        });
+
+        const payload = {};
+        Object.keys(values).forEach((key) => {
+          payload[`${key}_mean`] = mean(values[key]);
+          payload[`${key}_std`] = std(values[key]);
+          payload[`${key}_median`] = median(values[key]);
+        });
+        payload.window_size = events.length;
+        return payload;
       }
 
       textarea.addEventListener('keydown', (e) => {
@@ -47,17 +92,22 @@
         history.push({down, up, key: e.code});
         clampHistory();
 
-        if (history.length < 3) {
-          out.innerText = 'Type at least 3 keys to predict emotion...';
+        if (history.length < minKeystrokes) {
+          out.innerText = `Type at least ${minKeystrokes} keys to predict emotion...`;
           return;
         }
 
         const payload = computeFeatures(history);
+        if (!payload) {
+          out.innerText = `Type at least ${minKeystrokes} keys to predict emotion...`;
+          return;
+        }
 
         try {
           const res = await fetch('/predict', {
-            method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify(payload)
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(payload),
           });
           const j = await res.json();
           out.innerText = 'Emotion: ' + (j.emotion || j.error) + ' (conf=' + (j.confidence || 0) + ')';
