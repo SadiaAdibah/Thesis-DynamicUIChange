@@ -261,11 +261,11 @@
     }
 
     .progress {
-      height: 10px;
+      height: 8px;
       border-radius: 999px;
       background: rgba(148, 163, 184, 0.14);
       overflow: hidden;
-      margin-top: 12px;
+      flex: 1;
     }
 
     .progress-bar {
@@ -275,162 +275,173 @@
       background: linear-gradient(135deg, #38bdf8, #7c3aed);
     }
 
+    .source-bars {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .source-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .source-bar-label {
+      width: 42px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+
+    .source-bar-emotion {
+      width: 58px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-align: right;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .combined-row .source-bar-label {
+      color: var(--accent);
+    }
+
+    .combined-row .progress-bar {
+      background: linear-gradient(135deg, #38bdf8, #7c3aed);
+    }
+
     .emotion-happy {
       background: radial-gradient(circle at top left, rgba(251, 191, 36, 0.22), transparent 28%),
         radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.12), transparent 24%),
         #020617;
     }
 
-    .emotion-sad {
-      background: radial-gradient(circle at top left, rgba(251, 191, 36, 0.24), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(251, 191, 36, 0.12), transparent 24%),
-        #0f1720;
-    }
-
     body.emotion-sad {
-      --bg: #fff8dc;
-      --surface: rgba(255, 247, 209, 0.96);
+      --bg: #fffbeb;
+      --surface: rgba(255, 251, 225, 0.97);
       --surface-soft: rgba(251, 191, 36, 0.18);
-      --text: #0f172a;
-      --muted: #475569;
+      --text: #1c1410;
+      --muted: #6b5c3e;
       --accent: #f59e0b;
-      --accent-strong: #fbbf24;
-      --border: rgba(245, 158, 11, 0.28);
-      --shadow: 0 30px 80px rgba(133, 77, 14, 0.12);
-      background: radial-gradient(circle at top left, rgba(251, 191, 36, 0.24), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(249, 115, 22, 0.12), transparent 24%),
-        #fff7d0;
-      color: #0f172a;
+      --accent-strong: #d97706;
+      --border: rgba(245, 158, 11, 0.30);
+      --shadow: 0 30px 80px rgba(133, 77, 14, 0.14);
+      background:
+        radial-gradient(ellipse at top left, rgba(251, 191, 36, 0.36), transparent 32%),
+        radial-gradient(ellipse at bottom right, rgba(249, 115, 22, 0.18), transparent 28%),
+        #fffbeb;
+      color: #1c1410;
     }
 
     body.emotion-sad .page {
-      background: rgba(255, 248, 224, 0.95);
+      background: rgba(255, 251, 225, 0.96);
     }
 
     body.emotion-sad .problem-description,
     body.emotion-sad .panel {
-      background: rgba(255, 250, 213, 0.98);
-      border-color: rgba(245, 158, 11, 0.22);
+      background: rgba(255, 252, 235, 0.99);
+      border-color: rgba(245, 158, 11, 0.24);
       box-shadow: 0 24px 60px rgba(133, 77, 14, 0.10);
     }
 
     body.emotion-sad .back-btn {
-      background: rgba(251, 191, 36, 0.16);
-      color: #1f2937;
+      background: rgba(251, 191, 36, 0.18);
+      color: #1c1410;
     }
 
     body.emotion-sad .btn-primary {
       background: linear-gradient(135deg, #f59e0b, #facc15);
-      color: #1f2937;
+      color: #1c1410;
     }
 
     body.emotion-sad .btn-secondary {
-      color: #1f2937;
-      border-color: rgba(245, 158, 11, 0.30);
+      color: #1c1410;
+      border-color: rgba(245, 158, 11, 0.32);
       background: rgba(251, 191, 36, 0.14);
     }
 
     body.emotion-sad .status-pill,
     body.emotion-sad .badge,
-    body.emotion-sad .emotion-button.active,
-    body.emotion-sad .progress-bar {
+    body.emotion-sad .emotion-button.active {
       background: linear-gradient(135deg, #facc15, #fb923c);
-      color: #111827;
+      color: #1c1410;
     }
 
-    .emotion-stressed {
-      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.24), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.12), transparent 24%),
-        #071930;
+    body.emotion-sad .progress-bar {
+      background: linear-gradient(135deg, #fbbf24, #f97316);
     }
 
     body.emotion-stressed {
-      --bg: #e7f5ff;
-      --surface: rgba(235, 248, 255, 0.96);
+      --bg: #eff8ff;
+      --surface: rgba(239, 248, 255, 0.97);
       --surface-soft: rgba(56, 189, 248, 0.14);
-      --text: #0f172a;
-      --muted: #475569;
-      --accent: #38bdf8;
-      --accent-strong: #0ea5e9;
-      --border: rgba(14, 165, 233, 0.28);
-      --shadow: 0 30px 80px rgba(14, 165, 233, 0.14);
-      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.24), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.12), transparent 24%),
-        #e9f7ff;
-      color: #0f172a;
+      --text: #0c1a2e;
+      --muted: #3d6080;
+      --accent: #0ea5e9;
+      --accent-strong: #0284c7;
+      --border: rgba(14, 165, 233, 0.30);
+      --shadow: 0 30px 80px rgba(14, 165, 233, 0.16);
+      background:
+        radial-gradient(ellipse at top left, rgba(56, 189, 248, 0.32), transparent 32%),
+        radial-gradient(ellipse at bottom right, rgba(99, 179, 237, 0.18), transparent 28%),
+        #eff8ff;
+      color: #0c1a2e;
     }
 
     body.emotion-stressed .page {
-      background: rgba(230, 245, 255, 0.95);
+      background: rgba(235, 247, 255, 0.96);
     }
 
     body.emotion-stressed .problem-description,
     body.emotion-stressed .panel {
-      background: rgba(238, 249, 255, 0.98);
-      border-color: rgba(56, 189, 248, 0.22);
+      background: rgba(240, 250, 255, 0.99);
+      border-color: rgba(56, 189, 248, 0.24);
       box-shadow: 0 24px 60px rgba(14, 165, 233, 0.12);
     }
 
     body.emotion-stressed .back-btn {
-      background: rgba(56, 189, 248, 0.16);
-      color: #0f172a;
+      background: rgba(56, 189, 248, 0.18);
+      color: #0c1a2e;
     }
 
     body.emotion-stressed .btn-primary {
       background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-      color: #0f172a;
+      color: #0c1a2e;
     }
 
     body.emotion-stressed .btn-secondary {
-      color: #0f172a;
-      border-color: rgba(56, 189, 248, 0.30);
+      color: #0c1a2e;
+      border-color: rgba(56, 189, 248, 0.32);
       background: rgba(56, 189, 248, 0.12);
+    }
+
+    body.emotion-sad #code-editor,
+    body.emotion-stressed #code-editor {
+      color: #e2e8f0;
     }
 
     body.emotion-stressed .status-pill,
     body.emotion-stressed .badge,
-    body.emotion-stressed .emotion-button.active,
-    body.emotion-stressed .progress-bar {
+    body.emotion-stressed .emotion-button.active {
       background: linear-gradient(135deg, #38bdf8, #7dd3fc);
-      color: #111827;
+      color: #0c1a2e;
+    }
+
+    body.emotion-stressed .progress-bar {
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
     }
 
     .emotion-focused {
       background: radial-gradient(circle at top left, rgba(14, 165, 233, 0.22), transparent 28%),
         radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.12), transparent 24%),
         #081018;
-    }
-
-    .emotion-happy .status-pill,
-    .emotion-happy .badge,
-    .emotion-happy .emotion-button.active,
-    .emotion-happy .progress-bar {
-      background: linear-gradient(135deg, #facc15, #22c55e);
-      color: #111827;
-    }
-
-    .emotion-sad .status-pill,
-    .emotion-sad .badge,
-    .emotion-sad .emotion-button.active,
-    .emotion-sad .progress-bar {
-      background: linear-gradient(135deg, #60a5fa, #c084fc);
-      color: #111827;
-    }
-
-    .emotion-stressed .status-pill,
-    .emotion-stressed .badge,
-    .emotion-stressed .emotion-button.active,
-    .emotion-stressed .progress-bar {
-      background: linear-gradient(135deg, #ef4444, #f59e0b);
-      color: #111827;
-    }
-
-    .emotion-focused .status-pill,
-    .emotion-focused .badge,
-    .emotion-focused .emotion-button.active,
-    .emotion-focused .progress-bar {
-      background: linear-gradient(135deg, #0ea5e9, #22c55e);
-      color: #111827;
     }
 
     /* Cheerful overlay shown when aggregated emotion is sad/stressed */
@@ -537,6 +548,10 @@
       box-shadow: 0 24px 60px rgba(133, 77, 14, 0.10);
     }
 
+    body.cheerful-override #code-editor {
+      color: #0f172a;
+    }
+
     body.cheerful-override .back-btn,
     body.cheerful-override .btn-secondary {
       color: #1f2937;
@@ -614,6 +629,10 @@
       color: #0f172a;
       border-color: rgba(56, 189, 248, 0.28);
       background: rgba(56, 189, 248, 0.14);
+    }
+
+    body.calm-override #code-editor {
+      color: #0f172a;
     }
 
     body.calm-override .btn-primary {
@@ -776,7 +795,29 @@
           <h3>Current Emotion</h3>
           <div class="status-pill" id="current-emotion">Focused mode</div>
           <div class="status-pill" id="current-source">Source: manual</div>
-          <p class="progress"><div class="progress-bar" id="completion-bar" style="width: 64%;"></div></p>
+
+          <div class="source-bars">
+            <div class="source-bar-row">
+              <span class="source-bar-label">Face</span>
+              <div class="progress"><div class="progress-bar" id="face-bar" style="width: 0%;"></div></div>
+              <span class="source-bar-emotion" id="face-bar-emotion">–</span>
+            </div>
+            <div class="source-bar-row">
+              <span class="source-bar-label">Voice</span>
+              <div class="progress"><div class="progress-bar" id="voice-bar" style="width: 0%;"></div></div>
+              <span class="source-bar-emotion" id="voice-bar-emotion">–</span>
+            </div>
+            <div class="source-bar-row">
+              <span class="source-bar-label">Keys</span>
+              <div class="progress"><div class="progress-bar" id="keys-bar" style="width: 0%;"></div></div>
+              <span class="source-bar-emotion" id="keys-bar-emotion">–</span>
+            </div>
+            <div class="source-bar-row combined-row">
+              <span class="source-bar-label">Window</span>
+              <div class="progress"><div class="progress-bar" id="completion-bar" style="width: 0%;"></div></div>
+              <span class="source-bar-emotion" id="window-bar-label">0s</span>
+            </div>
+          </div>
         </div>
       </aside>
     </div>
@@ -939,6 +980,8 @@
       const remaining = Math.max(0, WINDOW_DURATION - elapsed);
       const progress = Math.min(elapsed / WINDOW_DURATION, 1.0);
       completionBar.style.width = (progress * 100) + '%';
+      const windowLabel = document.getElementById('window-bar-label');
+      if (windowLabel) windowLabel.textContent = remaining > 0 ? remaining.toFixed(1) + 's' : 'done';
       sourceStatus.textContent = `Collecting: ${remaining.toFixed(1)}s remaining`;
     }
     
@@ -1024,7 +1067,10 @@
       const config = emotionConfig[emotion] || emotionConfig.focused;
       status.textContent = `${config.label} mode`;
       sourceStatus.textContent = `Source: ${source}`;
-      completionBar.style.width = config.width;
+      // Reset window bar to full after result is shown
+      completionBar.style.width = '100%';
+      const windowLabel = document.getElementById('window-bar-label');
+      if (windowLabel) windowLabel.textContent = 'done';
     }
 
     // -------------------------
@@ -1115,9 +1161,26 @@
       cheerfulMessageTimers = [];
     }
 
+    const emotionBarWidths = {
+      happy: '100%', focused: '75%', stressed: '50%', sad: '25%'
+    };
+
+    function updateSourceBar(source, emotion) {
+      const barIds = { face: 'face-bar', voice: 'voice-bar', keystroke: 'keys-bar' };
+      const labelIds = { face: 'face-bar-emotion', voice: 'voice-bar-emotion', keystroke: 'keys-bar-emotion' };
+      const bar = document.getElementById(barIds[source]);
+      const label = document.getElementById(labelIds[source]);
+      if (bar) bar.style.width = emotionBarWidths[emotion] || '50%';
+      if (label) label.textContent = emotion.charAt(0).toUpperCase() + emotion.slice(1);
+    }
+
     function updateFromSources(origin) {
       // Store the source data but don't update UI immediately - let window system handle it
       lastSource = origin;
+      // Update the per-source bar for this origin
+      if (sourceState[origin]) {
+        updateSourceBar(origin, sourceState[origin]);
+      }
       // Data is being collected on the server side
       // UI will be updated when the 5-second window completes
     }
@@ -1257,26 +1320,35 @@
       voiceVolume = 0;
     }
 
-    async function sendVoiceChunk(blob) {
-      if (!blob || blob.size < VOICE_MIN_BYTES) {
-        return;
-      }
+    // Voice recording interval in ms — each cycle produces one complete WebM file
+    const VOICE_CYCLE_MS = 4000;
+    let voiceCycleTimer = null;
+    let voiceRecordingActive = false;
+
+    async function sendVoiceBlob(blob) {
+      if (!blob || blob.size < VOICE_MIN_BYTES) return;
       if (voiceVolume < VOICE_SILENCE_THRESHOLD) {
+        voiceStatus.textContent = '🔇 Voice: silence detected, skipping...';
         return;
       }
 
-      const extension = blob.type?.split('/')[1]?.split(';')[0] || 'webm';
+      // Derive a clean extension from the mimeType
+      const mime = blob.type || 'audio/webm';
+      const ext = mime.includes('ogg') ? 'ogg'
+                : mime.includes('mp4') ? 'mp4'
+                : 'webm';
+
       const formData = new FormData();
-      formData.append('file', blob, `voice.${extension}`);
+      // Giving a proper filename + extension lets the server detect the format reliably
+      formData.append('file', blob, `voice.${ext}`);
+
       try {
         const response = await fetch('/api/detect-voice', {
           method: 'POST',
           body: formData,
         });
 
-        if (response.status === 204) {
-          return;
-        }
+        if (response.status === 204) return;
 
         const text = await response.text();
         let result;
@@ -1289,17 +1361,56 @@
         if (response.ok && result.emotion) {
           const emotion = mapEmotion(result.emotion);
           sourceState.voice = emotion;
-          voiceStatus.textContent = `📊 Voice: ${result.emotion} (collecting for window)`;
+          voiceStatus.textContent = `📊 Voice: ${result.emotion} (${(result.confidence * 100).toFixed(0)}%) — collecting`;
           updateFromSources('voice');
         } else if (result.error && /Decoding failed|ffmpeg returned error code/i.test(result.error)) {
-          return;
+          voiceStatus.textContent = '⚠️ Voice: audio decode failed — retrying next cycle';
         } else {
-          voiceStatus.textContent = `Voice analysis error: ${result.error || response.statusText || 'unknown'}`;
-          console.error('Voice chunk error', response.status, result, text);
+          voiceStatus.textContent = `Voice error: ${result.error || response.statusText || 'unknown'}`;
+          console.error('Voice send error', response.status, result);
         }
       } catch (error) {
         voiceStatus.textContent = 'Voice send failed: ' + error.message;
       }
+    }
+
+    function startOneCycle(stream, mimeType) {
+      if (!voiceRecordingActive) return;
+
+      const chunks = [];
+      const options = mimeType ? { mimeType } : {};
+      let recorder;
+      try {
+        recorder = new MediaRecorder(stream, options);
+      } catch (e) {
+        recorder = new MediaRecorder(stream);
+      }
+      mediaRecorder = recorder;
+
+      recorder.ondataavailable = e => {
+        if (e.data && e.data.size > 0) chunks.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        if (chunks.length > 0) {
+          const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+          await sendVoiceBlob(blob);
+        }
+        // Immediately start the next cycle (no gap)
+        if (voiceRecordingActive) {
+          startOneCycle(stream, mimeType);
+        }
+      };
+
+      // Collect all data at once when we stop, not in incremental pieces
+      recorder.start();
+
+      // Stop after VOICE_CYCLE_MS to trigger onstop and process the complete recording
+      voiceCycleTimer = setTimeout(() => {
+        if (recorder.state === 'recording') {
+          recorder.stop();
+        }
+      }, VOICE_CYCLE_MS);
     }
 
     async function startVoiceRecording() {
@@ -1307,50 +1418,48 @@
         voiceStatus.textContent = 'Microphone not supported.';
         return;
       }
+      if (voiceRecordingActive) {
+        voiceStatus.textContent = 'Voice recording already active.';
+        return;
+      }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         voiceStream = stream;
         await startVoiceAnalyser(stream);
-        const options = {};
-        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-          options.mimeType = 'audio/webm;codecs=opus';
-        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
-          options.mimeType = 'audio/webm';
-        }
-        mediaRecorder = new MediaRecorder(stream, options);
-        mediaRecorder.ondataavailable = async event => {
-          if (event.data && event.data.size > 0) {
-            await sendVoiceChunk(event.data);
-          }
-        };
-        mediaRecorder.onstop = async () => {
-          if (voiceStream) {
-            voiceStream.getTracks().forEach(track => track.stop());
-            voiceStream = null;
-          }
-          await stopVoiceAnalyser();
-          voiceStatus.textContent = 'Voice recording stopped.';
-        };
-        mediaRecorder.start(2500);
-        voiceStatus.textContent = 'Recording voice continuously...';
+
+        // Pick the best supported mime type
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus'
+                       : MediaRecorder.isTypeSupported('audio/webm')              ? 'audio/webm'
+                       : MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')   ? 'audio/ogg;codecs=opus'
+                       : null;
+
+        voiceRecordingActive = true;
+        voiceStatus.textContent = `🎙️ Recording voice — analyzing every ${VOICE_CYCLE_MS / 1000}s...`;
+        startOneCycle(stream, mimeType);
       } catch (error) {
         voiceStatus.textContent = 'Failed: ' + error.message;
       }
     }
 
     function stopVoiceRecording() {
+      voiceRecordingActive = false;
+      if (voiceCycleTimer) { clearTimeout(voiceCycleTimer); voiceCycleTimer = null; }
       if (mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.stop();
-      } else {
-        voiceStatus.textContent = 'Recording not active.';
       }
+      if (voiceStream) {
+        voiceStream.getTracks().forEach(track => track.stop());
+        voiceStream = null;
+      }
+      stopVoiceAnalyser();
+      voiceStatus.textContent = 'Voice recording stopped.';
     }
 
     function scheduleKeystrokeAnalysis() {
       if (typingTimer) {
         clearTimeout(typingTimer);
       }
-      if (keystrokeHistory.length >= 3) {
+      if (keystrokeHistory.length >= 6) {
         typingTimer = setTimeout(() => analyzeKeystrokes('keystroke'), TYPING_DEBOUNCE_MS);
       }
     }
@@ -1365,7 +1474,7 @@
         delete pendingDown[event.key];
 
         keystrokeHistory.push({ down: downTime, up: upTime });
-        if (keystrokeHistory.length > 6) {
+        if (keystrokeHistory.length > 12) {
           keystrokeHistory.shift();
         }
         scheduleKeystrokeAnalysis();
@@ -1373,10 +1482,10 @@
     }
 
     function computeKeystrokeFeatures() {
-      if (keystrokeHistory.length < 3) {
-        throw new Error('Type at least 3 keys to analyze.');
+      if (keystrokeHistory.length < 6) {
+        throw new Error('Type at least 6 keys to analyze.');
       }
-      const events = keystrokeHistory.slice(-3);
+      const events = keystrokeHistory.slice(-6);
 
       // Build per-event interval values
       const rows = events.map((e, i) => {
@@ -1481,4 +1590,4 @@
     initializeEmotionWindow();
   </script>
 </body>
-</html>
+</html

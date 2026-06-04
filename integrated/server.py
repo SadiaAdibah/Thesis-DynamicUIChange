@@ -357,12 +357,26 @@ def detect_voice():
 
         if not response.ok:
             error_text = result.get("error", "Voice service returned an error")
-            if "Decoding failed" in error_text or "ffmpeg returned error code" in error_text:
+            if any(pattern in error_text for pattern in [
+                "Decoding failed",
+                "ffmpeg returned error code",
+                "Invalid data found",
+                "Error opening input",
+                "detected only with low score",
+                "ffmpeg exited"
+            ]):
                 return ('', 204)
             return jsonify({"error": error_text, "source": "voice"}), response.status_code
 
         if result.get("emotion") is None:
-            if result.get("error") and ("Decoding failed" in result["error"] or "ffmpeg returned error code" in result["error"]):
+            if result.get("error") and any(pattern in result["error"] for pattern in [
+                "Decoding failed",
+                "ffmpeg returned error code",
+                "Invalid data found",
+                "Error opening input",
+                "detected only with low score",
+                "ffmpeg exited"
+            ]):
                 return ('', 204)
             return jsonify({"error": result.get("error", "No emotion"), "source": "voice"}), 502
 

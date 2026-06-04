@@ -396,19 +396,7 @@
       font-size: 0.95rem;
     }
 
-    .emotion-sad {
-      background: radial-gradient(circle at top left, rgba(251, 191, 36, 0.24), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(249, 115, 22, 0.12), transparent 24%),
-        #fff7d0;
-    }
-
-    .emotion-stressed {
-      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.24), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.12), transparent 24%),
-        #e9f7ff;
-    }
-
-    .emotion-focused {
+    body.emotion-focused {
       background: radial-gradient(circle at top left, rgba(14, 165, 233, 0.22), transparent 28%),
         radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.12), transparent 24%),
         #081018;
@@ -528,52 +516,71 @@
       color: #111827;
     }
 
+    /* SAD → warm yellow theme (lifting toward happy) */
+    body.emotion-sad {
+      --bg: #fffbeb;
+      --surface: rgba(255, 251, 225, 0.97);
+      --surface-soft: rgba(251, 191, 36, 0.18);
+      --text: #1c1410;
+      --muted: #6b5c3e;
+      --accent: #f59e0b;
+      --accent-strong: #d97706;
+      --border: rgba(245, 158, 11, 0.30);
+      --shadow: 0 30px 80px rgba(133, 77, 14, 0.14);
+      background:
+        radial-gradient(ellipse at top left, rgba(251, 191, 36, 0.36), transparent 32%),
+        radial-gradient(ellipse at bottom right, rgba(249, 115, 22, 0.18), transparent 28%),
+        #fffbeb;
+      color: #1c1410;
+    }
+
     body.emotion-sad .page,
     body.emotion-sad .hero-figure,
     body.emotion-sad .panel,
     body.emotion-sad .problem-card,
     body.emotion-sad .workspace-card,
+    body.emotion-sad .hero-card,
     body.emotion-sad #code-editor {
-      background: rgba(255, 250, 213, 0.98);
-      border-color: rgba(245, 158, 11, 0.22);
-      color: #0f172a;
+      background: rgba(255, 252, 235, 0.99);
+      border-color: rgba(245, 158, 11, 0.24);
+      color: #1c1410;
       box-shadow: 0 24px 60px rgba(133, 77, 14, 0.10);
-    }
-
-    body.emotion-stressed .page,
-    body.emotion-stressed .hero-figure,
-    body.emotion-stressed .panel,
-    body.emotion-stressed .problem-card,
-    body.emotion-stressed .workspace-card,
-    body.emotion-stressed #code-editor {
-      background: rgba(238, 249, 255, 0.98);
-      border-color: rgba(56, 189, 248, 0.22);
-      color: #0f172a;
-      box-shadow: 0 24px 60px rgba(14, 165, 233, 0.10);
     }
 
     body.emotion-sad .btn-primary {
       background: linear-gradient(135deg, #f59e0b, #facc15);
-      color: #1f2937;
-    }
-
-    body.emotion-stressed .btn-primary {
-      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-      color: #0f172a;
+      color: #1c1410;
     }
 
     body.emotion-sad .btn-secondary,
     body.emotion-sad .back-btn {
-      color: #1f2937;
-      border-color: rgba(245, 158, 11, 0.30);
+      color: #1c1410;
+      border-color: rgba(245, 158, 11, 0.32);
       background: rgba(251, 191, 36, 0.14);
     }
 
-    body.emotion-stressed .btn-secondary,
-    body.emotion-stressed .back-btn {
-      color: #0f172a;
-      border-color: rgba(56, 189, 248, 0.30);
-      background: rgba(56, 189, 248, 0.12);
+    body.emotion-sad .status-pill,
+    body.emotion-sad .badge,
+    body.emotion-sad .emotion-button.active {
+      background: linear-gradient(135deg, #facc15, #fb923c);
+      color: #1c1410;
+    }
+
+    body.emotion-sad .progress-bar {
+      background: linear-gradient(135deg, #fbbf24, #f97316);
+    }
+
+    body.emotion-sad .problem-card:hover {
+      border-color: rgba(251, 191, 36, 0.40);
+    }
+
+    body.emotion-sad .brand-dot {
+      background: linear-gradient(135deg, #f59e0b, #facc15);
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.30);
+    }
+
+    body.emotion-sad .footer {
+      border-top-color: rgba(245, 158, 11, 0.14);
     }
 
     body.emotion-sad .hero-copy p,
@@ -584,7 +591,74 @@
     body.emotion-sad .source-summary,
     body.emotion-sad .note,
     body.emotion-sad .footer {
-      color: #525252;
+      color: #6b5c3e;
+    }
+
+    /* STRESSED → serene blue theme (calming toward calm) */
+    body.emotion-stressed {
+      --bg: #eff8ff;
+      --surface: rgba(239, 248, 255, 0.97);
+      --surface-soft: rgba(56, 189, 248, 0.14);
+      --text: #0c1a2e;
+      --muted: #3d6080;
+      --accent: #0ea5e9;
+      --accent-strong: #0284c7;
+      --border: rgba(14, 165, 233, 0.30);
+      --shadow: 0 30px 80px rgba(14, 165, 233, 0.16);
+      background:
+        radial-gradient(ellipse at top left, rgba(56, 189, 248, 0.32), transparent 32%),
+        radial-gradient(ellipse at bottom right, rgba(99, 179, 237, 0.18), transparent 28%),
+        #eff8ff;
+      color: #0c1a2e;
+    }
+
+    body.emotion-stressed .page,
+    body.emotion-stressed .hero-figure,
+    body.emotion-stressed .panel,
+    body.emotion-stressed .problem-card,
+    body.emotion-stressed .workspace-card,
+    body.emotion-stressed .hero-card,
+    body.emotion-stressed #code-editor {
+      background: rgba(240, 250, 255, 0.99);
+      border-color: rgba(56, 189, 248, 0.24);
+      color: #0c1a2e;
+      box-shadow: 0 24px 60px rgba(14, 165, 233, 0.12);
+    }
+
+    body.emotion-stressed .btn-primary {
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      color: #0c1a2e;
+    }
+
+    body.emotion-stressed .btn-secondary,
+    body.emotion-stressed .back-btn {
+      color: #0c1a2e;
+      border-color: rgba(56, 189, 248, 0.32);
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    body.emotion-stressed .status-pill,
+    body.emotion-stressed .badge,
+    body.emotion-stressed .emotion-button.active {
+      background: linear-gradient(135deg, #38bdf8, #7dd3fc);
+      color: #0c1a2e;
+    }
+
+    body.emotion-stressed .progress-bar {
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+    }
+
+    body.emotion-stressed .problem-card:hover {
+      border-color: rgba(56, 189, 248, 0.40);
+    }
+
+    body.emotion-stressed .brand-dot {
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.30);
+    }
+
+    body.emotion-stressed .footer {
+      border-top-color: rgba(56, 189, 248, 0.14);
     }
 
     body.emotion-stressed .hero-copy p,
@@ -595,59 +669,7 @@
     body.emotion-stressed .source-summary,
     body.emotion-stressed .note,
     body.emotion-stressed .footer {
-      color: #475569;
-    }
-
-    .emotion-happy .status-pill,
-    .emotion-happy .badge,
-    .emotion-happy .emotion-button.active,
-    .emotion-happy .progress-bar {
-      background: linear-gradient(135deg, #facc15, #22c55e);
-      color: #111827;
-    }
-
-    .emotion-sad .status-pill,
-    .emotion-sad .badge,
-    .emotion-sad .emotion-button.active,
-    .emotion-sad .progress-bar {
-      background: linear-gradient(135deg, #facc15, #fb923c);
-      color: #111827;
-    }
-
-    .emotion-stressed .status-pill,
-    .emotion-stressed .badge,
-    .emotion-stressed .emotion-button.active,
-    .emotion-stressed .progress-bar {
-      background: linear-gradient(135deg, #38bdf8, #7dd3fc);
-      color: #111827;
-    }
-
-    .emotion-focused .status-pill,
-    .emotion-focused .badge,
-    .emotion-focused .emotion-button.active,
-    .emotion-focused .progress-bar {
-      background: linear-gradient(135deg, #0ea5e9, #22c55e);
-      color: #111827;
-    }
-
-    .emotion-happy .problem-card {
-      border-color: rgba(250, 204, 21, 0.16);
-      background: rgba(255, 250, 215, 0.08);
-    }
-
-    .emotion-sad .problem-card {
-      border-color: rgba(245, 158, 11, 0.16);
-      background: rgba(255, 245, 204, 0.08);
-    }
-
-    .emotion-stressed .problem-card {
-      border-color: rgba(56, 189, 248, 0.16);
-      background: rgba(219, 234, 254, 0.08);
-    }
-
-    .emotion-focused .problem-card {
-      border-color: rgba(14, 165, 233, 0.16);
-      background: rgba(224, 242, 254, 0.08);
+      color: #3d6080;
     }
 
     @media (max-width: 930px) {
@@ -765,13 +787,13 @@
     const completionBar = document.getElementById('completion-bar');
 
     const emotionConfig = {
-      happy: { label: 'Happy', width: '100%' },
-      sad: { label: 'Sad', width: '40%' },
-      stressed: { label: 'Stressed', width: '30%' },
-      focused: { label: 'Focused', width: '70%' }
+      happy: { label: 'Happy' },
+      sad: { label: 'Sad' },
+      stressed: { label: 'Stressed' },
+      focused: { label: 'Focused' }
     };
-    const CHEERFUL_THEME_DURATION = 300; // 5 minutes in seconds
-    let cheerfulHoldUntil = 0; // timestamp when cheerful theme can be removed
+    const CHEERFUL_THEME_DURATION = 300;
+    let cheerfulHoldUntil = 0;
 
     let sourceState = {
       face: 'focused',
@@ -786,33 +808,27 @@
         acc[value] = (acc[value] || 0) + 1;
         return acc;
       }, {});
-
       const sortedEmotion = Object.entries(counts).sort((a, b) => b[1] - a[1]);
       if (sortedEmotion.length === 0) return 'focused';
       if (sortedEmotion[0][1] >= 2) return sortedEmotion[0][0];
       return sourceState[lastSource] || 'focused';
     }
 
-
     function setEmotion(emotion, source = 'manual') {
       const normalized = String(emotion || '').toLowerCase();
       const isSadOrStressed = normalized === 'sad' || normalized === 'stressed';
 
-      // If sad/stressed detected and cheerful hold period hasn't started, apply cheerful theme and start hold
       if (isSadOrStressed && Date.now() > cheerfulHoldUntil) {
         document.body.classList.remove('emotion-happy', 'emotion-sad', 'emotion-stressed', 'emotion-focused');
         document.body.classList.add('cheerful-theme');
         cheerfulHoldUntil = Date.now() + (CHEERFUL_THEME_DURATION * 1000);
       } else if (!isSadOrStressed && Date.now() > cheerfulHoldUntil) {
-        // Only remove cheerful theme after 5 minutes AND emotion is no longer sad/stressed
         document.body.classList.remove('cheerful-theme', 'emotion-happy', 'emotion-sad', 'emotion-stressed', 'emotion-focused');
         document.body.classList.add(`emotion-${normalized}`);
       } else if (isSadOrStressed && Date.now() <= cheerfulHoldUntil) {
-        // During cheerful hold period, keep showing cheerful theme
         document.body.classList.remove('emotion-happy', 'emotion-sad', 'emotion-stressed', 'emotion-focused');
         document.body.classList.add('cheerful-theme');
       } else {
-        // Normal emotion display
         document.body.classList.remove('cheerful-theme', 'emotion-happy', 'emotion-sad', 'emotion-stressed', 'emotion-focused');
         document.body.classList.add(`emotion-${normalized}`);
       }
@@ -822,9 +838,8 @@
       });
 
       const config = emotionConfig[normalized] || emotionConfig.focused;
-      status.textContent = `${config.label} mode`;
-      sourceStatus.textContent = `Source: ${source}`;
-      completionBar.style.width = config.width;
+      if (status) status.textContent = `${config.label} mode`;
+      if (sourceStatus) sourceStatus.textContent = `Source: ${source}`;
     }
 
     buttons.forEach(button => {
